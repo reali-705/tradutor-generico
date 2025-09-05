@@ -14,13 +14,9 @@ def gerar_dna_pseudoaleatorio(numero_codons: int) -> str:
                 break
     return codon_start + ''.join(codons_intermediarios) + random.choice(codon_stop)
 
-def transcrever_dna(dna: str) -> str:
-    # Transcrição considerando fita molde (complementar): A->U, T->A, C->G, G->C
-    rna = {
-        'A': 'U',
-        'T': 'A',
-        'C': 'G',
-        'G': 'C'
-    }
-    return ''.join([rna[base] for base in dna])
+def reversed_str(string: str) -> str:
+    nova_string = ""
+    for character in string:
+        nova_string = character + nova_string
+    return nova_string
 
