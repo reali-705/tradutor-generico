@@ -10,13 +10,13 @@ Z0 = símbolo inicial da pilha
 F = {q2} (conjunto de estados de aceitação)
 """
 from transcritor import transcritor
-from funcoes import reversed_str
+from src.funcoes import reversed_str
 
-#Pegar cadeias de DNA
+# Pegar cadeias de DNA
 with open("cadeia_DNA.txt", "r") as file:
     cadeias = list(map(str.strip,file.readlines()))
 
-#Limpar arquivo
+# Limpar arquivo
 with open("cadeia_RNA.txt", "w") as f:
     f.write("")
 

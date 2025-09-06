@@ -15,35 +15,43 @@ class TradutorDNA:
 # Classe genérica de Pilha
 class Pilha:
     #Inicia a pilha com uma possível lista inicial
-    def __init__(self, iteravel: list = []):
-        self.__itens__ : list[str] = list(reversed(iteravel))
-        self.length = len(self.__itens__)
+    def __init__(self, iteravel: list | tuple = []):
+        self._itens = list(reversed(iteravel))
+        self.length = len(self._itens)
     
-    #Função de emplhar itens
-    #Ela funciona da forma como o autõmato pilha
-    #Na transição (q0, ba, ZF) |- (q0, a, APF)
-    #O autômato leu b e o consumiu
-    #E também leu a pilha Z e o consumiu, deixando no lugar AP que juntou com F
+    # Função de emplhar itens
+    # Ela funciona da forma como o autõmato pilha
+    # Na transição (q0, ba, ZF) |- (q0, a, APF)
+    # O autômato leu b e o consumiu
+    # E também leu a pilha Z e o consumiu, deixando no lugar AP que juntou com F
     def empilhar(self, *item: str):
-        self.__itens__ = list(item) + self.__itens__
+        self._itens = list(item) + self._itens
         self.length += 1
         return self
     
-    #Recupera o item mais e cima
-    def desempilhar(self):
-        if not self.esta_vazia():
-            self.length -= 1
-            return self.__itens__.pop(0)
-        return ""
-    
-    def esta_vazia(self):
+    # Recupera o item mais e cima
+    def desempilhar(self) -> str | None:
+        if self.esta_vazia():
+            return None
+        self.length -= 1
+        return self._itens.pop(0)
+
+    def esta_vazia(self) -> bool:
         return self.length == 0
 
 
-
-#Classe do Autômato de Pilha
+# Classe do Autômato de Pilha
 class Automato_Pilha:
-    def __init__(self, Q: set[str], Σ: set[str], Γ: set[str], δ: dict[tuple[str, str, str], tuple[str, str]], q0: str, Z0:  str, F: set[str]):
+    def __init__(
+        self,
+        Q: set[str],                                       # conjunto de estados
+        Σ: set[str],                                       # alfabeto de entrada
+        Γ: set[str],                                       # alfabeto da pilha
+        δ: dict[tuple[str, str, str], tuple[str, str]],    # função de transição
+        q0: str,                                           # estado inicial
+        Z0: str,                                           # símbolo inicial da pilha
+        F: set[str]                                        # estados finais
+    ):
         self.pilha = Pilha()
         self.estados = Q
         self.Z0 = Z0
@@ -54,7 +62,7 @@ class Automato_Pilha:
         self.estados_finais = F
     
     def cadeia_saida(self):
-        return ''.join(map(str,self.pilha.__itens__))
+        return ''.join(map(str,self.pilha._itens))
     
     def processar_entrada(self, entrada: str):
         self.pilha = Pilha([self.Z0])

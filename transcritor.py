@@ -1,9 +1,9 @@
 """
 Código do autômato de pilha (AP) para tradução de DNA em aminoácidos
-M = (Q, Σ, Γ, δ, q0, Z0, F), onde:
+M = (Q, Σ, Γ, δ, q0, Z, F), onde:
 Q = {q0, q1, q2} (conjunto de estados)
 Σ = {A, C, G, T, U} (alfabeto de entrada)
-Γ = {A, C, G, T, U, Z0} (alfabeto da pilha)
+Γ = {A, C, G, T, U, Z} (alfabeto da pilha)
 δ = função de transição (definida nas funções do código)    
 q0 = estado inicial
 Z0 = símbolo inicial da pilha
@@ -12,8 +12,8 @@ F = {q2} (conjunto de estados de aceitação)
 
 from classe import Automato_Pilha
 
-#Falta ainda definir as transições do autômato de pilha, além dos estados
-#Farei isso mais tarde
+# Falta ainda definir as transições do autômato de pilha, além dos estados
+# Farei isso mais tarde
 transcritor = Automato_Pilha(
     Q = {'q0'},
     Σ = {'A', 'C', 'G', 'T'},
