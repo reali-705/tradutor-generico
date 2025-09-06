@@ -68,5 +68,3 @@ tabela_codons = {
     # Glicina (Gly)
     'GGU': 'Gly', 'GGC': 'Gly', 'GGA': 'Gly', 'GGG': 'Gly'
 }
-
-print("teste")

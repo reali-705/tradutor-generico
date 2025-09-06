@@ -29,3 +29,4 @@ transcritor = Automato_Pilha(
     Z0 = 'Z',
     F = {'q0'}
 )
+

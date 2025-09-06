@@ -16,8 +16,8 @@ from funcoes import reversed_str
 with open("cadeia_DNA.txt", "r") as file:
     cadeias = list(map(str.strip,file.readlines()))
 
+#Limpar arquivo
 with open("cadeia_RNA.txt", "w") as f:
-    #Limpar arquivo
     f.write("")
 
 with open("cadeia_RNA.txt", "a") as arquivo:
