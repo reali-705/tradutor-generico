@@ -1,47 +1,83 @@
 """
-Módulo que implementa o Transdutor Finito.
+Módulo que implementa o Transdutor Finito como Máquina de Mealy.
 
-Este autômato é responsável pelo primeiro estágio do pipeline:
-a transcrição de uma sequência de DNA para uma sequência de RNA.
-Ele valida a cadeia de entrada e realiza a substituição de bases.
+Um transdutor finito do tipo Mealy é um autômato finito que, para cada transição de estado,
+também produz um símbolo de saída, permitindo transformar cadeias de entrada em cadeias de saída.
 """
 
 class TransdutorFinito:
     """
-    Um Transdutor Finito que valida e transcreve DNA para RNA.
+    Classe que representa um Transdutor Finito baseado na Máquina de Mealy.
 
-    A tarefa de transcrição é regular, pois cada base é substituída
-    independentemente do seu contexto, tornando este o modelo teórico ideal.
+    A máquina de Mealy é definida por:
+        - Q: conjunto de estados
+        - Σ: alfabeto de entrada
+        - Γ: alfabeto de saída
+        - δ: função de transição de estados (Q × Σ → Q)
+        - λ: função de saída (Q × Σ → Γ)
+        - q0: estado inicial
     """
-    def __init__(self):
-        """
-        Inicializa o transdutor com as regras de transcrição.
-        """
-        self.regras_transcricao = {
-            'A': 'U',
-            'T': 'A',
-            'C': 'G',
-            'G': 'C'
-        }
-        self.alfabeto_dna = set(self.regras_transcricao.keys())
 
-    def transcrever(self, sequencia_dna):
+    def __init__(
+        self,
+        Q: set[str],                    # Conjunto de estados
+        Σ: set[str],                    # Alfabeto de entrada
+        Γ: set[str],                    # Alfabeto de saída
+        δ: dict[tuple[str, str], str],  # Função de transição de estados: (estado, símbolo) -> novo_estado
+        λ: dict[tuple[str, str], str],  # Função de saída: (estado, símbolo) -> símbolo de saída
+        q0: str,                        # Estado inicial
+    ):
         """
-        Valida e transcreve uma única sequência de DNA para RNA.
+        Inicializa o transdutor finito com os componentes da máquina de Mealy.
 
         Args:
-            sequencia_dna (str): A string contendo a sequência de DNA.
+            Q (set[str]): Conjunto de estados.
+            Σ (set[str]): Alfabeto de entrada.
+            Γ (set[str]): Alfabeto de saída.
+            δ (dict[tuple[str, str], str]): Função de transição de estados.
+            λ (dict[tuple[str, str], str]): Função de saída.
+            q0 (str): Estado inicial.
+        """
+        self.estados = Q
+        self.alfabeto_entrada = Σ
+        self.alfabeto_saida = Γ
+        self.funcao_transicao = δ
+        self.funcao_saida = λ
+        self.estado_inicial = q0
+
+    def transcrever(self, cadeia: str) -> str:
+        """
+        Processa uma cadeia de entrada e retorna a cadeia de saída correspondente,
+        conforme as funções de transição e saída da máquina de Mealy.
+
+        Args:
+            cadeia (str): Cadeia de entrada a ser processada.
 
         Returns:
-            str: A sequência de RNA transcrita.
-            None: Se a sequência de DNA for inválida (contém caracteres não-padrão).
+            str: Cadeia de saída gerada pelo transdutor.
+
+        Raises:
+            ValueError: Se encontrar símbolo inválido, transição ou saída indefinida.
         """
-        rna_resultante = []
-        for base in sequencia_dna.upper():
-            if base not in self.alfabeto_dna:
-                print(f"Erro de Transcrição: Caractere inválido '{base}' encontrado na sequência de DNA.")
-                return None
-            
-            rna_resultante.append(self.regras_transcricao[base])
+        resultado = []
+        estado_atual = self.estado_inicial
         
-        return "".join(rna_resultante)
+        for simbolo in cadeia:
+            # Verifica se o símbolo pertence ao alfabeto de entrada
+            if simbolo not in self.alfabeto_entrada:
+                raise ValueError(f"Símbolo '{simbolo}' não pertence ao alfabeto de entrada.")
+
+            tupla = (estado_atual, simbolo)
+            # Obtém o próximo estado a partir da função de transição
+            estado_proximo = self.funcao_transicao.get(tupla, None)
+            if estado_proximo is None:
+                raise ValueError(f"Transição não definida para {tupla}.")
+            # Obtém o símbolo de saída correspondente
+            saida = self.funcao_saida.get(tupla, None)
+            if saida is None:
+                raise ValueError(f"Saída não definida para {tupla}.")
+
+            resultado.append(saida)
+            estado_atual = estado_proximo  # Atualiza o estado atual para o próximo estado
+
+        return ''.join(resultado)
