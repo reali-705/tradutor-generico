@@ -50,6 +50,7 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
     # Retorna a instância do transdutor configurada
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
 
+<<<<<<< HEAD
 
 def criar_sinteze_proteica() -> Automato_Pilha_Deterministico_ε:
     """
@@ -79,3 +80,7 @@ def criar_sinteze_proteica() -> Automato_Pilha_Deterministico_ε:
 
 
     
+'======='
+
+def criar_autômato_tradutor_rna_proteina() -> Automato_Pilha_Deterministico_ε:
+    pass

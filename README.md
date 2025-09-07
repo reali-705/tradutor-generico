@@ -61,7 +61,7 @@ O fluxo de dados do sistema é modelado como um pipeline de dois autômatos que 
 ### Passos
 1. **Clone o repositório:**
    ```bash
-   git clone [URL_DO_SEU_REPOSITORIO]
+   git clone https://github.com/Gian-Figueiredo/automatos.git
    cd tradutor-genetico
    ```
 
@@ -89,8 +89,9 @@ O fluxo de dados do sistema é modelado como um pipeline de dois autômatos que 
 O projeto foi desenvolvido pela seguinte equipe:
 
 - **Desenvolvimento do Código:**
-    - Alessandro
-    - Gian
+    - [Alessandro Reali Lopes Silva](https://github.com/reali-705)
+    - [Gian Victor Gonçalves Figueiredo](https://github.com/Gian-Figueiredo)
 
 - **Elaboração do Artigo Científico:**
-    - Jhonata
+    - [Jhonata Bezerra Figueiredo](https://github.com/Jhonatabz)
+    - [Felipe Lisboa Brasil](https://github.com/FelipeBrasill)
