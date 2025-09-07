@@ -1,1 +1,12 @@
+# Byte-code compilado do Python
 __pycache__/
+*.pyc
+
+# Pastas de ambiente virtual
+venv/
+env/
+.venv/
+
+# Arquivos de configuração de IDEs
+.vscode/
+.idea/
