@@ -111,4 +111,3 @@ class Automato_Pilha_Deterministico_ε :
             for character in dupla[1]:
                 self.__pilha.push(character)
         return True
-

@@ -6,7 +6,7 @@ disponibilizando as principais funções e classes para serem importadas
 em outras partes do projeto.
 """
 
-from .automata import TransdutorFinito, Automato_Pilha
+from .automata import TransdutorFinito, Automato_Pilha_Deterministico_ε
 from .utils import gerar_dna_aleatorio, gerar_dna_pseudoaleatorio, ler_arquivo, escrever_arquivo
 from .tabela_codons import TABELA_CODONS
 
@@ -49,3 +49,33 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
 
     # Retorna a instância do transdutor configurada
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
+
+
+def criar_sinteze_proteica() -> Automato_Pilha_Deterministico_ε:
+    """
+     Q: set[str],                                       # conjunto de estados
+        Σ: set[str],                                       # alfabeto de entrada
+        Γ: set[str],                                       # alfabeto da pilha
+        δ: dict[tuple[str, str | None, str], tuple[str, list[str]]],    # função de transição
+        q0: str,                                           # estado inicial
+        Z0: str,                                           # símbolo inicial da pilha
+        F: set[str]): 
+    """
+    
+    Q = {"q0", "q1", "q2", "q3"}
+    Σ = {"U", "A", "G", "C"}
+    Γ = set(set(TABELA_CODONS.values()).union({"Z0", " ", "-"}))
+    δ = {
+        ("q0", "U", "Z0") : ("q0", ["Z0"]), ("q0", "G", "Z0") : ("q0", ["Z0"]), ("q0", "C", "Z0") : ("q0", ["Z0"]), ("q0", "A", "Z0") : ("q1", ["Z0"]),
+        ("q1", "A", "Z0") : ("q0", ["Z0"]), ("q1", "G", "Z0") : ("q0", ["Z0"]), ("q1", "C", "Z0") : ("q0", ["Z0"]), ("q1", "U", "Z0") : ("q2", ["Z0"]),
+        ("q2", "A", "Z0") : ("q0", ["Z0"]), ("q2", "U", "Z0") : ("q0", ["Z0"]), ("q2", "C", "Z0") : ("q0", ["Z0"]), ("q2", "G", "Z0") : ("q3", ["met", "-"]),
+        ("q3", "")
+    }
+    q0 = "q0"
+    Z0 = "Z0"
+    F = {"q0"}
+    
+    return Automato_Pilha_Deterministico_ε(Q, Σ, Γ, δ, q0, Z0, F)
+
+
+    
