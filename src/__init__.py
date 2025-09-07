@@ -6,7 +6,7 @@ disponibilizando as principais funções e classes para serem importadas
 em outras partes do projeto.
 """
 
-from .automata import TransdutorFinito, Automato_Pilha
+from .automata import TransdutorFinito, Automato_Pilha_Deterministico_ε
 from .utils import gerar_dna_aleatorio, gerar_dna_pseudoaleatorio, ler_arquivo, escrever_arquivo
 from .tabela_codons import TABELA_CODONS
 
@@ -50,5 +50,5 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
     # Retorna a instância do transdutor configurada
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
 
-def criar_autômato_tradutor_rna_proteina() -> Automato_Pilha:
+def criar_autômato_tradutor_rna_proteina() -> Automato_Pilha_Deterministico_ε:
     pass
