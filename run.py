@@ -27,6 +27,7 @@ TASKS = {
     "main": ["python", "-m", "main"],
     "test_dna_p": ["python", "-m", "tests.dna_pseudoaleatorio"],
     "test_dna_a": ["python", "-m", "tests.dna_aleatorio"],
+    "test_ribossomo": ["python", "-m", "tests.ribossomo"],
     "clean": clean_project,  # A tarefa "clean" agora chama a função diretamente
 }
 
