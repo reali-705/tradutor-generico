@@ -25,7 +25,8 @@ def clean_project():
 # Mapeia um nome amigável para o comando ou função
 TASKS = {
     "main": ["python", "-m", "main"],
-    "test_dna": ["python", "-m", "tests.dna_pseudoaleatorio"],
+    "test_dna_p": ["python", "-m", "tests.dna_pseudoaleatorio"],
+    "test_dna_a": ["python", "-m", "tests.dna_aleatorio"],
     "clean": clean_project,  # A tarefa "clean" agora chama a função diretamente
 }
 

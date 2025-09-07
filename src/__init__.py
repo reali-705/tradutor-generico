@@ -50,8 +50,6 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
     # Retorna a instância do transdutor configurada
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
 
-<<<<<<< HEAD
-
 def criar_sinteze_proteica() -> Automato_Pilha_Deterministico_ε:
     """
      Q: set[str],                                       # conjunto de estados
@@ -70,17 +68,9 @@ def criar_sinteze_proteica() -> Automato_Pilha_Deterministico_ε:
         ("q0", "U", "Z0") : ("q0", ["Z0"]), ("q0", "G", "Z0") : ("q0", ["Z0"]), ("q0", "C", "Z0") : ("q0", ["Z0"]), ("q0", "A", "Z0") : ("q1", ["Z0"]),
         ("q1", "A", "Z0") : ("q0", ["Z0"]), ("q1", "G", "Z0") : ("q0", ["Z0"]), ("q1", "C", "Z0") : ("q0", ["Z0"]), ("q1", "U", "Z0") : ("q2", ["Z0"]),
         ("q2", "A", "Z0") : ("q0", ["Z0"]), ("q2", "U", "Z0") : ("q0", ["Z0"]), ("q2", "C", "Z0") : ("q0", ["Z0"]), ("q2", "G", "Z0") : ("q3", ["met", "-"]),
-        ("q3", "")
     }
     q0 = "q0"
     Z0 = "Z0"
     F = {"q0"}
     
     return Automato_Pilha_Deterministico_ε(Q, Σ, Γ, δ, q0, Z0, F)
-
-
-    
-'======='
-
-def criar_autômato_tradutor_rna_proteina() -> Automato_Pilha_Deterministico_ε:
-    pass
