@@ -49,3 +49,6 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
 
     # Retorna a instância do transdutor configurada
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
+
+def criar_autômato_tradutor_rna_proteina() -> Automato_Pilha:
+    pass
