@@ -1,7 +1,7 @@
 # Dicionário completo de códons de mRNA para aminoácidos (Tabela do Código Genético Padrão)
 # As chaves são os códons e os valores são os aminoácidos correspondentes.
 
-tabela_codons = {
+TABELA_CODONS = {
     # Metionina (Met) / CÓDON DE INÍCIO
     'AUG': 'Met',
 
