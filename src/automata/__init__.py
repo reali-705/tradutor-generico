@@ -12,4 +12,4 @@ from src.automata import TransdutorFinito
 """
 
 from .transdutor_finito import TransdutorFinito
-from .transdutor_pilha import Automato_Pilha
+from .automato_pilha import Automato_Pilha
