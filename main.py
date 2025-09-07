@@ -47,6 +47,3 @@ TODO
 - [] autômato de pilha
 '''
 
-from src import criar_sinteze_proteica
-
-a = criar_sinteze_proteica()

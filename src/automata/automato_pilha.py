@@ -36,7 +36,7 @@ class Automato_Pilha_Deterministico_ε :
         Q: set[str],                                       # conjunto de estados
         Σ: set[str],                                       # alfabeto de entrada
         Γ: set[str],                                       # alfabeto da pilha
-        δ: dict[tuple[str, str | None, str], tuple[str, list[str]]],    # função de transição
+        δ: dict[tuple[str, str, str], tuple[str, list[str]]],    # função de transição
         q0: str,                                           # estado inicial
         Z0: str,                                           # símbolo inicial da pilha
         F: set[str]):                                      # estados finais
@@ -65,7 +65,7 @@ class Automato_Pilha_Deterministico_ε :
                     error = f"A transição {trinca} -> {self.__transicoes[trinca]}. {trinca[0]} não pertence ao conjunto de estados"
                     raise TypeError(error)
                     
-                if trinca[1] not in self.__alfabeto_entrada and trinca[1] != None:
+                if trinca[1] not in self.__alfabeto_entrada and trinca[1] != "":
                     erro = f"A transição {trinca} -> {self.__transicoes[trinca]}. {trinca[1]} não pertence ao alfabeto de entrada"
                     raise TypeError(erro)
 
@@ -92,7 +92,7 @@ class Automato_Pilha_Deterministico_ε :
             dupla = self.__transicoes.get(trinca, None)
             
             if dupla == None:
-                dupla = self.__transicoes.get((trinca[0], None, trinca[2]), None)
+                dupla = self.__transicoes.get((trinca[0], "", trinca[2]), None)
                 if dupla == None:
                     return False
             else:
@@ -103,7 +103,7 @@ class Automato_Pilha_Deterministico_ε :
                 self.__pilha.push(character)
              
         while not (estado_atual in self.__estados_finais or self.__pilha.isEmpty()):
-            trinca = (estado_atual, None, self.__pilha.top())
+            trinca = (estado_atual, "", self.__pilha.top())
             dupla = self.__transicoes.get(trinca, None)
             if dupla == None:
                 return False
