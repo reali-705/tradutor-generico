@@ -1,69 +1,80 @@
-# -*- coding: utf-8 -*-
-"""
-Módulo que implementa o Transdutor de Pilha.
-
-Este autômato é responsável pelo segundo estágio do pipeline:
-a validação sintática e a tradução de uma sequência de RNA para uma proteína.
-"""
-from ..tabela_codons import TABELA_CODONS
-
-class TransdutorPilha:
-    """
-    Um Transdutor de Pilha que valida e traduz RNA para uma cadeia de aminoácidos.
-
-    Este modelo é ideal para reconhecer a estrutura gramatical de um gene
-    (INÍCIO-CORPO-FIM), que é uma linguagem livre de contexto. A pilha é usada
-    simbolicamente aqui para construir a proteína durante a validação.
-    """
+'''
+Criar uma gramática livre de contexto não é fácil, nem útil, pois podemos fazer tudo por autômato de pilha.
+A gramática será na parte teórica.
+class TradutorDNA:
     def __init__(self):
-        """
-        Inicializa o tradutor com os códons de início e parada.
-        """
-        self.codon_inicio = 'AUG'
-        self.codons_parada = {'UAA', 'UAG', 'UGA'}
-        self.tabela_codons = TABELA_CODONS
+        self.V = {'A', 'C', 'G', 'T', 'U'}
+        self.Σ = {'A', 'C', 'G', 'T', 'U'}
+        self.R = {'A': 'U', 'C': 'G', 'G': 'C', 'T': 'A'}
+        self.S = {'A', 'C', 'G', 'T', 'U'}
 
-    def traduzir(self, sequencia_rna):
-        """
-        Valida e traduz uma única sequência de RNA para uma proteína.
+    def traduzir(self, dna):
+        return ''.join([self.R.get(base, base) for base in dna])
+'''
 
-        Args:
-            sequencia_rna (str): A string contendo a sequência de RNA.
-
-        Returns:
-            str: A cadeia de aminoácidos (proteína).
-            None: Se a sequência de RNA não tiver uma estrutura traduzível válida.
-        """
-        try:
-            # 1. Encontrar o primeiro códon de início 'AUG'
-            start_index = sequencia_rna.find(self.codon_inicio)
-            if start_index == -1:
-                print("Erro de Tradução: Códon de início 'AUG' não encontrado.")
-                return None
-
-            proteina = []
-            # Começa a ler a partir do códon de início
-            for i in range(start_index, len(sequencia_rna), 3):
-                # Garante que temos um códon completo de 3 bases
-                if i + 3 > len(sequencia_rna):
-                    print("Aviso de Tradução: Sequência terminou sem um códon de parada claro.")
-                    break
-                
-                codon = sequencia_rna[i:i+3]
-                
-                # 2. Verifica se o códon é de parada
-                if codon in self.codons_parada:
-                    # Tradução bem-sucedida, encontrou o fim.
-                    return "-".join(proteina)
-                
-                # 3. Traduz o códon e adiciona à "pilha" (nossa lista de proteína)
-                aminoacido = self.tabela_codons.get(codon, '?') # '?' para códons desconhecidos
-                proteina.append(aminoacido)
-            
-            # Se o loop terminar sem encontrar um códon de parada
-            print("Aviso de Tradução: A tradução percorreu a sequência inteira sem encontrar um códon de parada.")
-            return "-".join(proteina)
-
-        except Exception as e:
-            print(f"Um erro inesperado ocorreu durante a tradução: {e}")
+# Classe genérica de Pilha
+class Pilha:
+    #Inicia a pilha com uma possível lista inicial
+    def __init__(self, iteravel: list | tuple = []):
+        self._itens = list(reversed(iteravel))
+        self.length = len(self._itens)
+    
+    # Função de emplhar itens
+    # Ela funciona da forma como o autõmato pilha
+    # Na transição (q0, ba, ZF) |- (q0, a, APF)
+    # O autômato leu b e o consumiu
+    # E também leu a pilha Z e o consumiu, deixando no lugar AP que juntou com F
+    def empilhar(self, *item: str):
+        self._itens = list(item) + self._itens
+        self.length += 1
+        return self
+    
+    # Recupera o item mais e cima
+    def desempilhar(self) -> str | None:
+        if self.esta_vazia():
             return None
+        self.length -= 1
+        return self._itens.pop(0)
+
+    def esta_vazia(self) -> bool:
+        return self.length == 0
+
+
+# Classe do Autômato de Pilha
+class Automato_Pilha:
+    def __init__(
+        self,
+        Q: set[str],                                       # conjunto de estados
+        Σ: set[str],                                       # alfabeto de entrada
+        Γ: set[str],                                       # alfabeto da pilha
+        δ: dict[tuple[str, str, str], tuple[str, str]],    # função de transição
+        q0: str,                                           # estado inicial
+        Z0: str,                                           # símbolo inicial da pilha
+        F: set[str]                                        # estados finais
+    ):
+        self.pilha = Pilha()
+        self.estados = Q
+        self.Z0 = Z0
+        self.alfabeto_entrada = Σ
+        self.transicoes = δ
+        self.alfabeto_pilha = Γ
+        self.estado_atual = q0
+        self.estados_finais = F
+    
+    def cadeia_saida(self):
+        return ''.join(map(str,self.pilha._itens))
+    
+    def processar_entrada(self, entrada: str):
+        self.pilha = Pilha([self.Z0])
+        for simbolo in entrada:
+            if simbolo not in self.alfabeto_entrada or self.pilha.esta_vazia():
+                return False
+            tripla = (self.estado_atual, simbolo, str(self.pilha.desempilhar()))
+            tupla = self.transicoes.get(tripla, None)
+            if tupla is None:
+                return False
+            self.estado_atual = tupla[0]
+            self.pilha.empilhar(*tupla[1])
+        return self.estado_atual in self.estados_finais or self.pilha.esta_vazia()
+            
+            

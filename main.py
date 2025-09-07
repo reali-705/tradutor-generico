@@ -9,6 +9,7 @@ q0 = estado inicial
 Z0 = símbolo inicial da pilha
 F = {q2} (conjunto de estados de aceitação)
 """
+'''
 from transcritor import transcritor
 from src.funcoes import reversed_str
 
@@ -26,3 +27,22 @@ with open("cadeia_RNA.txt", "a") as arquivo:
             arquivo.write(reversed_str(transcritor.cadeia_saida()) + "\n")
         else:
             arquivo.write("\n")
+'''
+
+'''
+TODO
+## Input e Output
+    - Arquivo que lê inputs e escreve arquivos output
+## transdutor finito
+    - Um autômato para validar a cadeia de DNA e transforma a cadeia de RNA
+## Autômato de pilha
+    - Um autômato para validar a cadeia de RNA e transformar em proteínas
+
+# Definição para cargos
+## Reali
+- [] Input e Output
+- [] transdutor finito
+
+## Gian
+- [] autômato de pilha
+'''
