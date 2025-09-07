@@ -26,4 +26,3 @@ with open("cadeia_RNA.txt", "a") as arquivo:
             arquivo.write(reversed_str(transcritor.cadeia_saida()) + "\n")
         else:
             arquivo.write("\n")
-
