@@ -1,29 +1,25 @@
 """
-Script de teste para o fluxo de geração de DNA aleatório e transcrição.
+Ponto de entrada para o teste de geração de DNA aleatório.
 
-Este script executa os seguintes passos:
-1. Gera uma cadeia de DNA completamente aleatória com um tamanho definido.
-2. Salva a cadeia de DNA em um arquivo de texto.
-3. Lê o arquivo para verificar a integridade dos dados.
-4. Transcreve a cadeia de DNA para uma cadeia de RNA usando um Transdutor Finito.
-5. Salva a cadeia de RNA resultante em outro arquivo de texto.
-6. Opcionalmente, limpa os arquivos gerados após a execução.
-
-Argumentos da Linha de Comando:
--b, --bases       : Define o número de bases (tamanho) da cadeia de DNA.
--k, --keep-files  : Se presente, impede a limpeza dos arquivos gerados.
+Este script configura os argumentos da linha de comando específicos para a geração
+de DNA aleatório e, em seguida, invoca o executor de teste genérico para realizar
+o fluxo completo de validação e transcrição.
 """
 
 import argparse
 from pathlib import Path
-from src import gerar_dna_aleatorio, escrever_arquivo, ler_arquivo, criar_transcritor_dna_rna
+from src import gerar_dna_aleatorio
+from ._modelo_testes import run_transcription_test
 
 def setup_parser() -> argparse.Namespace:
     """
-    Configura e retorna o parser de argumentos da linha de comando.
-    
+    Configura e processa os argumentos da linha de comando para este teste.
+
+    Define os argumentos para o número de bases a serem geradas e a opção
+    de manter os arquivos de saída.
+
     Returns:
-        argparse.Namespace: Um objeto contendo os argumentos processados.
+        argparse.Namespace: Um objeto contendo os argumentos fornecidos pelo usuário.
     """
     parser = argparse.ArgumentParser(description="Teste de geração de DNA aleatório e transcrição para RNA")
     parser.add_argument(
@@ -36,90 +32,31 @@ def setup_parser() -> argparse.Namespace:
         "-k", "--keep-files",
         action="store_true",
         default=False,
-        help="Mantém os arquivos (cadeia_DNA.txt e cadeia_RNA.txt) após o teste."
+        help="Mantém os arquivos gerados após o teste."
     )
     return parser.parse_args()
 
 def main() -> None:
     """
-    Função principal que orquestra a execução completa do teste.
-    
-    Realiza a geração de uma cadeia de DNA aleatória, sua escrita em arquivo,
-    leitura, transcrição para RNA e, finalmente, a escrita do RNA em outro arquivo,
-    validando cada etapa do processo.
+    Função principal que configura e executa o teste de DNA aleatório.
+
+    Esta função lê os argumentos da linha de comando e chama o executor de
+    teste genérico (`run_transcription_test`) com os parâmetros apropriados
+    para o teste de DNA aleatório.
     """
-    # --- Configuração Inicial ---
     args = setup_parser()
-    num_bases = args.bases
-    LARGURA_LINHA = 100
-    PREVIA_CADEIA = 50
-    caminho_dna = Path("./data/input/dna_aleatorio_test.txt")
-    caminho_rna = Path("./data/output/rna_aleatorio_transcrito_test.txt")
-
-    # Garante que os diretórios de destino existam antes de usá-los.
-    caminho_dna.parent.mkdir(parents=True, exist_ok=True)
-    caminho_rna.parent.mkdir(parents=True, exist_ok=True)
     
-    print("=" * LARGURA_LINHA)
-    print("Iniciando teste de Geração (Aleatória) e Transcrição de DNA".center(LARGURA_LINHA))
-    print("=" * LARGURA_LINHA)
-
-    try:
-        # --- 1. Geração do DNA ---
-        print(f"\n[1] Gerando DNA com {num_bases} bases...")
-        cadeia_dna = gerar_dna_aleatorio(num_bases)
-        previa_dna = f"{cadeia_dna[:PREVIA_CADEIA]}..." if len(cadeia_dna) > PREVIA_CADEIA else cadeia_dna
-        print(f"    -> DNA Gerado: {previa_dna}")
-
-        tamanho_cadeia = len(cadeia_dna)
-        assert tamanho_cadeia == num_bases, \
-            f"Tamanho da cadeia gerada ({tamanho_cadeia}) não corresponde ao esperado ({num_bases})."
-        print("    -> OK: Tamanho da cadeia de DNA está correto.")
-
-        # --- 2. Escrita e Leitura do DNA ---
-        print("\n[2] Escrevendo e lendo o arquivo de DNA...")
-        escrever_arquivo(caminho_dna, cadeia_dna)
-        cadeia_dna_lida = ler_arquivo(caminho_dna)
-        
-        assert cadeia_dna_lida == cadeia_dna, "O conteúdo lido do arquivo de DNA não corresponde ao gerado."
-        print(f"    -> OK: Arquivo '{caminho_dna}' lido com sucesso.")
-
-        # --- 3. Transcrição para RNA ---
-        print("\n[3] Transcrevendo DNA para RNA...")
-        transcritor = criar_transcritor_dna_rna()
-        cadeia_rna = transcritor.transcrever(cadeia_dna_lida)
-        previa_rna = f"{cadeia_rna[:PREVIA_CADEIA]}..." if len(cadeia_rna) > PREVIA_CADEIA else cadeia_rna
-        print(f"    -> RNA Transcrito: {previa_rna}")
-
-        assert len(cadeia_rna) == len(cadeia_dna), "O tamanho da cadeia de RNA não é compatível com a de DNA."
-        print("    -> OK: Transcrição concluída.")
-
-        # --- 4. Escrita do RNA ---
-        print("\n[4] Escrevendo arquivo de RNA...")
-        escrever_arquivo(caminho_rna, cadeia_rna)
-        print(f"    -> OK: Arquivo '{caminho_rna}' escrito com sucesso.")
-
-        print("\n" + " TESTE CONCLUÍDO COM SUCESSO ".center(LARGURA_LINHA, "="))
-
-    except Exception as e:
-        print(f"\nERRO DURANTE O TESTE: {e}")
-        
-    finally:
-        # --- 5. Limpeza dos Arquivos ---
-        print("\n[5] Finalizando execução...")
-        if args.keep_files:
-            print("    -> Mantendo arquivos de teste conforme solicitado (--keep-files).")
-        else:
-            print("    -> Limpando arquivos de teste...")
-            if caminho_dna.exists():
-                caminho_dna.unlink()
-                print(f"       - Arquivo '{caminho_dna}' removido.")
-            if caminho_rna.exists():
-                caminho_rna.unlink()
-                print(f"       - Arquivo '{caminho_rna}' removido.")
-
-        print("=" * LARGURA_LINHA)
-
+    # Chama o executor de teste genérico com as configurações específicas
+    # para a geração de DNA aleatório.
+    run_transcription_test(
+        nome_teste="Aleatória",
+        tipo_teste='aleatorio',
+        dna_path=Path("./data/input/dna_aleatorio_test.txt"),
+        rna_path=Path("./data/output/rna_aleatorio_transcrito_test.txt"),
+        funcao_geradora=gerar_dna_aleatorio,
+        argumento_funcao=args.bases,
+        keep_files=args.keep_files
+    )
 
 if __name__ == "__main__":
     main()
