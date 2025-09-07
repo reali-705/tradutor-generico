@@ -51,8 +51,8 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
 
 
-
 def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
+
     """
      Q: set[str],                                       # conjunto de estados
         Σ: set[str],                                       # alfabeto de entrada
@@ -60,7 +60,7 @@ def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
         δ: dict[tuple[str, str | None, str], tuple[str, list[str]]],    # função de transição
         q0: str,                                           # estado inicial
         Z0: str,                                           # símbolo inicial da pilha
-        F: set[str]): 
+        F: set[str]): e
     """
     
     Q = {"q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q18", "q19", }
@@ -87,7 +87,6 @@ def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
         ("q17", "U", " ") : ("q17", [" "]), ("q17", "G", " ") : ("q17", [" "]), ("q17", "C", " ") : ("q17", [" "]), ("q17", "A", " ") : ("q18", [" "]),
         ("q18", "A", " ") : ("q17", [" "]), ("q18", "G", " ") : ("q17", [" "]), ("q18", "C", " ") : ("q17", [" "]), ("q18", "U", " ") : ("q19", [" "]),
         ("q19", "A", " ") : ("q17", [" "]), ("q19", "U", " ") : ("q17", [" "]), ("q19", "C", " ") : ("q17", [" "]), ("q19", "G", " ") : ("q3", [" ", "Met", "-"])
-        
     }
     q0 = "q0"
     Z0 = "Z0"
