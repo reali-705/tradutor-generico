@@ -173,8 +173,4 @@ class Automato_Pilha_Deterministico_ε:
             for character in dupla[1]:
                 self.__pilha.push(character)
                 
-        # A cadeia é aceita se, e somente se, o estado final for um estado de aceitação.
-        if estado_atual in self.__estados_finais:
-            return True
-        self.__pilha.clear()
-        return False
+        return True
