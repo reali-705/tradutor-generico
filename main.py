@@ -40,9 +40,9 @@ TODO
 
 # Definição para cargos
 ## Reali
-- [] Input e Output
-- [] transdutor finito
+- [X] Input e Output
+- [X] transdutor finito
 
 ## Gian
-- [] autômato de pilha
+- [X] autômato de pilha
 '''

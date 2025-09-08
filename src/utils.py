@@ -57,7 +57,7 @@ def nome_arquivo_valido(nome_arquivo: str) -> bool:
     Returns:
         bool: True se o nome for válido, False caso contrário.
     """
-    return nome_arquivo.strip() and not re.search(r'[<>:"/\\|?*]', nome_arquivo)
+    return bool(nome_arquivo.strip()) and not re.search(r'[<>:"/\\|?*]', nome_arquivo)
 
 def escrever_arquivo(caminho_arquivo: str | Path, conteudo: str) -> None:
     """
