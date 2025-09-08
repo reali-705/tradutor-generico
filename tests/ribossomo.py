@@ -4,11 +4,25 @@ Script de teste para o Automato_Pilha_Deterministico_ε configurado como um ribo
 Este teste valida a capacidade do autômato de:
 1. Reconhecer e traduzir uma fita de RNA com um único gene.
 2. Reconhecer e traduzir múltiplos genes na mesma fita.
-3. Rejeitar fitas de RNA malformadas.
+3. Rejeitar fitas de RNA malformadas ou incompletas.
+4. Lidar com "lixo" genético antes, entre e depois dos genes.
 """
-
-# Importa a função fábrica que cria nosso autômato
 from src import criar_ribossomo
+
+def formatar_proteina(pilha_bruta: str) -> str:
+    """
+    Limpa e formata a string bruta da pilha para uma representação legível da proteína.
+    Exemplo: " ueL-teM- ehP-teM-Z0" -> "Met-Phe Met-Leu"
+    """
+    # Remove o marcador inicial e os hifens
+    limpa = pilha_bruta.replace("Z0", "").replace("-", "")
+    # Divide as proteínas (separadas por espaço) e inverte cada aminoácido
+    proteinas = [
+        "".join([amino[::-1] for amino in parte.split()])
+        for parte in limpa.split(" ") if parte
+    ]
+    # Junta os aminoácidos com hifens e as proteínas com espaços
+    return " ".join(["-".join(p) for p in reversed(proteinas)])
 
 def run_tests():
     """Executa uma série de testes de validação no autômato do ribossomo."""
@@ -16,81 +30,49 @@ def run_tests():
     print("INICIANDO TESTES DO AUTÔMATO DE PILHA (RIBOSSOMO)".center(80))
     print("="*80)
 
-    # 1. Cria a instância do ribossomo
     ribossomo = criar_ribossomo()
 
-    # 2. Define os casos de teste
-    # (cadeia_rna, resultado_esperado_validacao, proteina_esperada_bruta)
+    # Formato: (descrição, rna_entrada, validacao_esperada, proteina_formatada_esperada)
     test_cases = [
-        (
-            "AUGUUUUAA", 
-            True, 
-            " ehP-teM-Z0", 
-            "Gene simples (Met-Phe-Stop)"
-        ),
-        (
-            "CCCAUGUUUUAG", 
-            True, 
-            " ehP-teM-Z0", 
-            "Gene simples com lixo no início"
-        ),
-        (
-            "AUGUUUUAAAUGCUCUAG", 
-            True, 
-            " ueL-teM- ehP-teM-Z0", 
-            "Dois genes na mesma fita"
-        ),
-        (
-            "AUGUUU", 
-            False, 
-            "", 
-            "Gene sem códon de parada (deve falhar)"
-        ),
-        (
-            "UUUUAG", 
-            False, 
-            "", 
-            "Gene sem códon de início (deve falhar)"
-        ),
-        (
-            "",
-            False,
-            "",
-            "Cadeia vazia (deve falhar)"
-        )
+        ("Gene simples", "AUGUUUUAA", True, "Met-Phe"),
+        ("Gene com lixo no início", "CCCAUGUUUUAG", True, "Met-Phe"),
+        ("Gene com lixo no final", "AUGUUUUAGCCC", True, "Met-Phe"),
+        ("Dois genes", "AUGUUUUAAAUGCUCUAG", True, "Met-Phe Met-Leu"),
+        ("Dois genes com lixo entre eles", "AUGUUUUAAXXXAUGCUCUAG", True, "Met-Phe Met-Leu"),
+        ("Gene sem códon de parada", "AUGUUU", False, ""),
+        ("Gene sem códon de início", "UUUUAG", False, ""),
+        ("Cadeia vazia", "", False, ""),
+        ("Apenas códon de início", "AUG", False, ""),
+        ("Apenas códon de parada", "UAA", False, ""),
+        ("Cadeia com apenas 2 bases", "AU", False, ""),
     ]
 
-    # 3. Executa e valida cada caso de teste
-    for i, (rna, esperado_bool, esperado_proteina, descricao) in enumerate(test_cases):
+    testes_passaram = 0
+    for i, (descricao, rna, esperado_bool, esperado_proteina) in enumerate(test_cases):
         print(f"\n--- Teste {i+1}: {descricao} ---")
         print(f"    RNA de entrada: '{rna}'")
         
         try:
-            # Executa a validação
             resultado_bool = ribossomo.validar(rna)
-            
-            # Pega a saída da pilha
-            resultado_proteina = ribossomo.cadeia_saida()
+            pilha_bruta = ribossomo.cadeia_saida()
+            resultado_proteina = formatar_proteina(pilha_bruta)
 
-            print(f"    Resultado da validação: {resultado_bool} (Esperado: {esperado_bool})")
-            print(f"    Conteúdo da pilha: '{resultado_proteina}' (Esperado: '{esperado_proteina}')")
+            print(f"    Validação: {resultado_bool} (Esperado: {esperado_bool})")
+            print(f"    Proteína: '{resultado_proteina}' (Esperada: '{esperado_proteina}')")
 
-            # Verifica se os resultados estão corretos
-            assert resultado_bool == esperado_bool, "O resultado da validação booleana está incorreto!"
-            
-            # Só verifica a proteína se a validação for um sucesso esperado
+            assert resultado_bool == esperado_bool, "Resultado da validação booleana incorreto!"
             if esperado_bool:
-                assert resultado_proteina == esperado_proteina, "A proteína gerada na pilha está incorreta!"
+                assert resultado_proteina == esperado_proteina, "Proteína gerada incorreta!"
             
-            print("    -> OK: Teste passou!")
+            print("    -> SUCESSO")
+            testes_passaram += 1
 
         except Exception as e:
-            print(f"    -> ERRO INESPERADO: O teste falhou com a exceção: {e}")
+            print(f"    -> FALHA: Ocorreu um erro inesperado: {e}")
 
     print("\n" + "="*80)
-    print("TESTES DO RIBOSSOMO CONCLUÍDOS".center(80))
+    print(f"TESTES CONCLUÍDOS: {testes_passaram}/{len(test_cases)} passaram.".center(80))
     print("="*80)
-
 
 if __name__ == "__main__":
     run_tests()
