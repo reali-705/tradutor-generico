@@ -142,6 +142,8 @@ class Automato_Pilha_Deterministico_ε:
         # Loop principal: consome a cadeia de entrada
         while n < len(cadeia):
             if self.__pilha.isEmpty():
+                #Caso a pilha esteja vazia antes do fim da cadeia, ele limpa a pilha e retorna falso
+                self.__pilha.clear()
                 return False
             
             trinca = (estado_atual, cadeia[n], self.__pilha.top())
@@ -150,6 +152,8 @@ class Automato_Pilha_Deterministico_ε:
             if dupla == None:
                 dupla = self.__transicoes.get((trinca[0], "", trinca[2]), None)
                 if dupla == None:
+                    #Caso não existe transições para essa trinca, ele limpa a pilha e retorna falso
+                    self.__pilha.clear()
                     return False
             else:
                 n += 1
@@ -162,10 +166,15 @@ class Automato_Pilha_Deterministico_ε:
             trinca = (estado_atual, "", self.__pilha.top())
             dupla = self.__transicoes.get(trinca, None)
             if dupla == None:
+                #Caso não exista transção em vazio com esse estado atual e essa símbolo no topo da pilha, retorna falso
+                self.__pilha.clear()
                 return False
             estado_atual = dupla[0]
             for character in dupla[1]:
                 self.__pilha.push(character)
                 
         # A cadeia é aceita se, e somente se, o estado final for um estado de aceitação.
-        return estado_atual in self.__estados_finais
+        if estado_atual in self.__estados_finais:
+            return True
+        self.__pilha.clear()
+        return False

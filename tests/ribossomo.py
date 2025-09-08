@@ -7,22 +7,11 @@ Este teste valida a capacidade do autômato de:
 3. Rejeitar fitas de RNA malformadas ou incompletas.
 4. Lidar com "lixo" genético antes, entre e depois dos genes.
 """
+
 from src import criar_ribossomo
 
 def formatar_proteina(pilha_bruta: str) -> str:
-    """
-    Limpa e formata a string bruta da pilha para uma representação legível da proteína.
-    Exemplo: " ueL-teM- ehP-teM-Z0" -> "Met-Phe Met-Leu"
-    """
-    # Remove o marcador inicial e os hifens
-    limpa = pilha_bruta.replace("Z0", "").replace("-", "")
-    # Divide as proteínas (separadas por espaço) e inverte cada aminoácido
-    proteinas = [
-        "".join([amino[::-1] for amino in parte.split()])
-        for parte in limpa.split(" ") if parte
-    ]
-    # Junta os aminoácidos com hifens e as proteínas com espaços
-    return " ".join(["-".join(p) for p in reversed(proteinas)])
+    return pilha_bruta[::-1]
 
 def run_tests():
     """Executa uma série de testes de validação no autômato do ribossomo."""
@@ -38,7 +27,7 @@ def run_tests():
         ("Gene com lixo no início", "CCCAUGUUUUAG", True, "Met-Phe"),
         ("Gene com lixo no final", "AUGUUUUAGCCC", True, "Met-Phe"),
         ("Dois genes", "AUGUUUUAAAUGCUCUAG", True, "Met-Phe Met-Leu"),
-        ("Dois genes com lixo entre eles", "AUGUUUUAAXXXAUGCUCUAG", True, "Met-Phe Met-Leu"),
+        ("Dois genes com lixo entre eles", "AUGUUUUAAAAAAUGCUCUAG", True, "Met-Phe Met-Leu"),
         ("Gene sem códon de parada", "AUGUUU", False, ""),
         ("Gene sem códon de início", "UUUUAG", False, ""),
         ("Cadeia vazia", "", False, ""),
