@@ -3,7 +3,8 @@ Aplicação Principal para Transcrição e Tradução Genética.
 
 Este script oferece uma interface de linha de comando para executar o pipeline
 completo de biologia computacional, permitindo a execução de múltiplas
-tarefas em uma única chamada.
+tarefas (geração aleatória, pseudoaleatória e leitura de arquivo) em uma
+única chamada.
 """
 
 import argparse
@@ -29,7 +30,15 @@ BASES_ALEATORIO_DEFAULT = 10000
 # --- Configuração e Execução ---
 
 def setup_parser() -> argparse.ArgumentParser:
-    """Configura o parser de argumentos da linha de comando."""
+    """
+    Configura o parser de argumentos da linha de comando.
+    
+    Define os argumentos -p, -a, e -l, que podem ser usados em conjunto
+    para executar múltiplas tarefas.
+    
+    Returns:
+        argparse.ArgumentParser: O objeto parser configurado.
+    """
     parser = argparse.ArgumentParser(
         description="Tradutor Genético: Converte DNA em Proteínas usando Teoria dos Autômatos.",
         formatter_class=argparse.RawTextHelpFormatter
@@ -65,33 +74,38 @@ def setup_parser() -> argparse.ArgumentParser:
 
 def processar_cadeia(dna: str, nome_base_arquivo: str):
     """
-    Função central que executa o pipeline de transcrição e tradução.
-    
+    Função central que executa o pipeline de transcrição e tradução para uma
+    dada cadeia de DNA.
+
     Args:
         dna (str): A cadeia de DNA a ser processada.
-        nome_base_arquivo (str): O nome base para os arquivos de saída.
+        nome_base_arquivo (str): O nome base para os arquivos de saída (ex: 'aleatorio').
+    
+    Raises:
+        ValueError: Se a cadeia de DNA contiver caracteres inválidos.
     """
+    # Passo 1: Validação e Limpeza da Cadeia de DNA
     print("-> Validando e limpando DNA...")
     cadeia_dna = "".join(filter(str.isalpha, dna)).upper()
     if not all(base in 'ATCG' for base in cadeia_dna):
         raise ValueError("DNA contém bases inválidas. Use apenas A, T, C, G.")
     
-    # 1. Transcrição para RNA
+    # Passo 2: Transcrição para RNA usando o Transdutor Finito
     print("-> Transcrevendo DNA para RNA...")
     transcritor = criar_transcritor_dna_rna()
     cadeia_rna = transcritor.transcrever(cadeia_dna)
 
-    # 2. Tradução para Proteína
+    # Passo 3: Tradução para Proteína usando o Autômato de Pilha
     print("-> Traduzindo RNA para Proteína...")
     ribossomo = criar_ribossomo()
     cadeia_proteina = ""
     if ribossomo.validar(cadeia_rna):
-        cadeia_proteina = ribossomo.cadeia_saida()[::-1] # Reverte a cadeia de saída
+        cadeia_proteina = ribossomo.cadeia_saida()[::-1] # Reverte a cadeia de saída conforme projetado
         print("-> Tradução bem-sucedida.")
     else:
         print("-> AVISO: Nenhuma estrutura de gene válida (AUG...STOP) foi encontrada no RNA. Nenhuma proteína foi produzida.")
 
-    # 3. Exibição dos resultados
+    # Passo 4: Exibição dos resultados no terminal
     print("\n" + " RESULTADOS ".center(LARGURA_LINHA, "="))
     previa_dna = f"{cadeia_dna[:PREVIA_CADEIA]}..." if len(cadeia_dna) > PREVIA_CADEIA else cadeia_dna
     previa_rna = f"{cadeia_rna[:PREVIA_CADEIA]}..." if len(cadeia_rna) > PREVIA_CADEIA else cadeia_rna
@@ -101,12 +115,12 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
         for proteina in proteinas if proteina
     ]
 
-    print(f"DNA Gerado ({len(cadeia_dna)}):\n    {previa_dna}")
-    print(f"RNA Transcrito ({len(cadeia_rna)}):\n    {previa_rna}")
-    print(f"Proteína(s) :\n    {"\n    ".join(previa_proteina) if previa_proteina else 'N/A'}")
+    print(f"DNA Gerado ({len(cadeia_dna)} bases):\n    {previa_dna}")
+    print(f"RNA Transcrito ({len(cadeia_rna)} bases):\n    {previa_rna}")
+    print(f"Proteína(s) Gerada(s):\n    {'\n    '.join(previa_proteina) if previa_proteina else 'N/A'}")
     print("=" * LARGURA_LINHA)
 
-    # 4. Salvando arquivos
+    # Passo 5: Salvando os resultados em arquivos
     print("\n-> Salvando arquivos de saída...")
     escrever_arquivo(INPUT_PATH / f"{nome_base_arquivo}_dna.txt", cadeia_dna)
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_rna.txt", cadeia_rna)
@@ -115,9 +129,15 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
 
 
 def main() -> None:
-    """Função principal que orquestra a execução do programa."""
+    """
+    Ponto de entrada principal do script.
+    
+    Orquestra a análise dos argumentos da linha de comando e executa as
+    tarefas solicitadas na ordem definida: pseudoaleatório, aleatório e leitura de arquivo.
+    """
     parser = setup_parser()
     
+    # Se nenhum argumento for passado, exibe a ajuda e encerra.
     if len(sys.argv) == 1:
         parser.print_help()
         print("\nERRO: Você deve fornecer pelo menos uma ação (-p, -a, ou -l).")
@@ -127,6 +147,7 @@ def main() -> None:
     print("\n" + " Início da Execução ".center(LARGURA_LINHA, "="))
 
     try:
+        # Executa as tarefas em uma ordem pré-definida, se os argumentos estiverem presentes.
         if args.pseudoaleatorio is not None:
             print("\n" + " MODO: DNA PSEUDOALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_pseudoaleatorio(args.pseudoaleatorio)
@@ -140,8 +161,8 @@ def main() -> None:
         if args.ler_arquivo:
             print("\n" + " MODO: LEITURA DE ARQUIVO ".center(LARGURA_LINHA, "#"))
             
+            # Lógica robusta para encontrar o arquivo de entrada
             caminho_proposto = Path(args.ler_arquivo)
-            
             if not caminho_proposto.exists():
                 caminho_final = INPUT_PATH / caminho_proposto.with_suffix('.txt').name
             else:
@@ -163,7 +184,7 @@ def main() -> None:
         print("\n" + " Execução Finalizada ".center(LARGURA_LINHA, "=") + "\n")
 
 if __name__ == "__main__":
-    # Garante que os diretórios de dados existam
+    # Garante que os diretórios de dados existam antes de qualquer operação
     INPUT_PATH.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
     main()
