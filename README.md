@@ -10,11 +10,12 @@ O sistema implementa um pipeline de dois estágios principais:
 2.  **Tradução (RNA → Proteína):** Emprega um **Autômato de Pilha Determinístico** para validar a sintaxe de um gene na fita de RNA e traduzi-lo em uma cadeia de aminoácidos.
 
 ## ✨ Funcionalidades Principais
+- **Interface de Linha de Comando:** Uma aplicação `main.py` robusta que permite gerar e processar DNA de várias formas.
+- **Processamento em Lote:** Capacidade de executar múltiplas tarefas (geração aleatória, pseudoaleatória e leitura de arquivo) em uma única chamada.
 - **Geração de DNA:** Scripts para gerar cadeias de DNA aleatórias e pseudoaleatórias (com estrutura de gene).
-- **Transcrição DNA → RNA:** Converte DNA em RNA mensageiro usando um Transdutor Finito.
-- **Tradução RNA → Proteína:** Identifica genes (delimitados por códons de início e parada), valida sua estrutura e os traduz em proteínas usando um Autômato de Pilha.
-- **Testes Modulares:** Um conjunto de testes de unidade e integração para validar cada componente do sistema de forma isolada e em conjunto.
-- **Orquestrador de Tarefas:** Um script `run.py` centraliza a execução de todas as tarefas do projeto, desde os testes até a limpeza do ambiente.
+- **Transcrição e Tradução:** Pipeline completo que converte DNA em RNA e, subsequentemente, em proteínas.
+- **Orquestrador de Tarefas:** Um script `run.py` que centraliza a execução da aplicação principal, dos testes e de tarefas de manutenção.
+- **Testes Modulares:** Um conjunto de testes de unidade e integração para validar cada componente do sistema.
 
 ## 📂 Estrutura do Projeto
 ```
@@ -37,7 +38,7 @@ tradutor-genetico/
 │   ├── dna_pseudoaleatorio.py
 │   └── ribossomo.py      # Teste de unidade para o autômato de pilha
 │
-├── main.py               # (Futuro) Ponto de entrada da aplicação principal
+├── main.py               # Ponto de entrada da aplicação principal
 ├── run.py                # Orquestrador de tarefas do projeto
 └── README.md
 ```
@@ -47,14 +48,14 @@ tradutor-genetico/
 ### Módulo 1: Transcrição (Transdutor Finito / Máquina de Mealy)
 - **Modelo:** `src/automata/transdutor_finito.py`
 - **Propósito:** Converter uma fita de DNA em RNA.
-- **Teoria:** Este processo é uma **tradução regular**, pois cada símbolo de entrada (`A`, `T`, `C`, `G`) mapeia diretamente para um único símbolo de saída (`U`, `A`, `G`, `C`) sem a necessidade de memória complexa. Uma Máquina de Mealy é o modelo perfeito para essa tarefa, pois ela produz uma saída para cada transição de estado.
+- **Teoria:** Este processo é uma **tradução regular**, pois cada símbolo de entrada (`A`, `T`, `C`, `G`) mapeia diretamente para um único símbolo de saída (`U`, `A`, `G`, `C`) sem a necessidade de memória complexa.
 
 ### Módulo 2: Tradução (Autômato de Pilha Determinístico)
 - **Modelo:** `src/automata/automato_pilha.py`
 - **Propósito:** Validar e traduzir uma fita de RNA em proteínas.
-- **Teoria:** A estrutura de um gene é mais complexa e não pode ser reconhecida por um autômato finito. Ela pertence a uma **Linguagem Livre de Contexto**.
-    - **Linguagem Reconhecida (L):** A linguagem `L` reconhecida pelo autômato pode ser descrita como fitas de RNA que contêm uma ou mais sequências de genes válidas. Um gene válido é definido pela estrutura `INÍCIO - CORPO - FIM`.
-    - **Gramática Livre de Contexto (Simplificada):** Uma gramática `G` que gera uma versão simplificada de um gene (um códon de início, um corpo e um códon de fim) seria:
+- **Teoria:** A estrutura de um gene pertence a uma **Linguagem Livre de Contexto**.
+    - **Linguagem Reconhecida (L):** Fitas de RNA que contêm uma ou mais sequências de genes válidas, definidas pela estrutura `INÍCIO - CORPO - FIM`.
+    - **Gramática Livre de Contexto (Simplificada):**
       ```
       G = (V, Σ, R, S)
       V = {S, Gene, Corpo, Codon, Base}  (Variáveis)
@@ -70,7 +71,7 @@ tradutor-genetico/
 
 ## 🚀 Como Executar o Projeto
 
-O script `run.py` é a maneira recomendada para interagir com o projeto. Ele oferece uma interface de linha de comando simples para executar os testes e outras tarefas.
+O script `run.py` é o ponto de entrada unificado para todas as operações.
 
 ### Pré-requisitos
 - Python 3.8 ou superior.
@@ -79,59 +80,86 @@ O script `run.py` é a maneira recomendada para interagir com o projeto. Ele ofe
 Abra o terminal na raiz do projeto e utilize os seguintes comandos:
 
 ---
-#### 1. Teste de Geração de DNA Aleatório
-Testa o fluxo de geração de DNA aleatório e sua transcrição para RNA.
+### 1. Executando a Aplicação Principal (`main.py`)
+
+Esta é a forma principal de usar o projeto. Você pode combinar as opções para executar várias tarefas em sequência.
+
+**Comando base:**
 ```bash
-python run.py test_dna_a [OPÇÕES]
+python run.py main [OPÇÕES]
 ```
-- **Opções:**
-  - `-b <NÚMERO>` ou `--bases <NÚMERO>`: Define o número de bases a serem geradas (padrão: 50).
-  - `-k` ou `--keep-files`: Mantém os arquivos de saída gerados em `data/`.
-- **Exemplo:**
+
+**Opções:**
+- `-p [N_CODONS]`, `--pseudoaleatorio [N_CODONS]`
+  - Gera DNA pseudoaleatório. Se `N_CODONS` não for especificado, usa o valor padrão (1000).
+- `-a [N_BASES]`, `--aleatorio [N_BASES]`
+  - Gera DNA aleatório. Se `N_BASES` não for especificado, usa o valor padrão (10000).
+- `-l <ARQUIVO>`, `--ler-arquivo <ARQUIVO>`
+  - Lê uma cadeia de DNA de um arquivo. O script é inteligente e consegue encontrar o arquivo mesmo que você omita a extensão `.txt` ou o caminho `data/input/`.
+
+**Exemplos de Uso:**
+
+- **Gerar DNA pseudoaleatório com o tamanho padrão:**
   ```bash
-  # Gera e testa uma cadeia com 200 bases
-  python run.py test_dna_a -b 200
+  python run.py main -p
+  ```
+
+- **Gerar DNA aleatório com 500 bases:**
+  ```bash
+  python run.py main -a 500
+  ```
+
+- **Ler um arquivo de DNA (várias formas):**
+  ```bash
+  # Forma simples
+  python run.py main -l meu_dna
+  # Com extensão
+  python run.py main -l meu_dna.txt
+  # Com caminho relativo
+  python run.py main -l data/input/meu_dna.txt
+  ```
+
+- **Executar múltiplas tarefas em uma única chamada:**
+  *(O programa executará na ordem: pseudoaleatório, aleatório, leitura de arquivo)*
+  ```bash
+  python run.py main -p 50 -a 200 -l meu_dna
   ```
 
 ---
-#### 2. Teste de Geração de DNA Pseudoaleatório
-Testa o fluxo de geração de DNA com estrutura de gene (início-corpo-fim) e sua transcrição.
-```bash
-python run.py test_dna_p [OPÇÕES]
-```
-- **Opções:**
-  - `-c <NÚMERO>` ou `--codons <NÚMERO>`: Define o número de códons no corpo do gene (padrão: 10).
-  - `-k` ou `--keep-files`: Mantém os arquivos de saída.
-- **Exemplo:**
+### 2. Executando os Testes Individuais
+
+Para validar componentes específicos do sistema.
+
+- **Teste de Geração de DNA Aleatório:**
   ```bash
-  # Gera e testa um gene com 30 códons e mantém os arquivos
-  python run.py test_dna_p -c 30 -k
+  python run.py test_dna_a --bases 100 --keep-files
+  ```
+- **Teste de Geração de DNA Pseudoaleatório:**
+  ```bash
+  python run.py test_dna_p --codons 50 --keep-files
+  ```
+- **Teste de Unidade do Ribossomo (Autômato de Pilha):**
+  ```bash
+  python run.py test_ribossomo
   ```
 
 ---
-#### 3. Teste do Ribossomo (Autômato de Pilha)
-Executa um teste de unidade no autômato de pilha, validando a tradução de RNA para proteína com múltiplos casos de teste (sucesso e falha).
-```bash
-python run.py test_ribossomo
-```
-*(Este teste não possui opções de linha de comando)*
+### 3. Limpeza do Projeto
 
----
-#### 4. Execução da Aplicação Principal
-*(Nota: O `main.py` é um trabalho em andamento e será o ponto de entrada para processar arquivos de DNA customizados.)*
-```bash
-python run.py main
-```
+Para remover arquivos gerados.
 
----
-#### 5. Limpeza do Projeto
-Remove todos os diretórios `__pycache__` e arquivos `.pyc` gerados pelo Python.
-```bash
-python run.py clean
-```
-
-### Tratamento de Erros
-O script `run.py` possui tratamento de erros básico. Se uma tarefa inválida for fornecida, ele informará o erro e listará todas as tarefas disponíveis.
+- **Limpeza Padrão (apenas cache do Python):**
+  ```bash
+  python run.py clean
+  ```
+- **Limpeza Completa (cache + todos os arquivos `.txt` em `data/`):**
+  ```bash
+  python run.py clean --all
+  ```
+  ou
+  ```bash
+  python run.py clean -a
+  ```
 
 ## 👥 Equipe e Divisão de Tarefas
 O projeto foi desenvolvido pela seguinte equipe:
