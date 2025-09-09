@@ -86,9 +86,14 @@ def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
         
         # Bloco C (q4) -> Pro, Arg, His, Gln
         ("q4", "A", "-"): ("q6", ["-"]), ("q4", "C", "-"): ("q5", ["-", "orP", "-"]), ("q4", "G", "-"): ("q5", ["-", "grA", "-"]), ("q4", "U", "-"): ("q5", ["-", "ueL", "-"]),
-        ("q5", "A", "-"): ("q3", ["-"]), ("q5", "C", "-"): ("q3", ["-"]), ("q5", "G", "-"): ("q3", ["-"]), ("q5", "U", "-"): ("q3", ["-"]),
         ("q6", "A", "-"): ("q3", ["-", "nlG", "-"]), ("q6", "C", "-"): ("q3", ["-", "siH", "-"]), ("q6", "G", "-"): ("q3", ["-", "nlG", "-"]), ("q6", "U", "-"): ("q3", ["-", "siH", "-"]),
 
+        # Bloco Curinga
+        # Nas nossas pesquisas percebe-se que existe aminoácidos que são determinados apenas com duas bases
+        # Logo, criamos o estado q5 para servir de curinga , então assim que cair nesses aminoácidos, eles levarão a q5
+        # E q5 só consumirá a última base e retornará para q3
+        ("q5", "A", "-"): ("q3", ["-"]), ("q5", "C", "-"): ("q3", ["-"]), ("q5", "G", "-"): ("q3", ["-"]), ("q5", "U", "-"): ("q3", ["-"]),
+        
         # Bloco G (q7) -> Val, Ala, Gly, Asp, Glu
         ("q7", "A", "-"): ("q8", ["-"]), ("q7", "C", "-"): ("q5", ["-", "alA", "-"]), ("q7", "G", "-"): ("q5", ["-", "ylG", "-"]), ("q7", "U", "-"): ("q5", ["-", "laV", "-"]),
         ("q8", "A", "-"): ("q3", ["-", "ulG", "-"]), ("q8", "C", "-"): ("q3", ["-", "psA", "-"]), ("q8", "G", "-"): ("q3", ["-", "ulG", "-"]), ("q8", "U", "-"): ("q3", ["-", "psA", "-"]),
