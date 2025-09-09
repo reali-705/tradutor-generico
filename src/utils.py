@@ -94,7 +94,7 @@ def ler_arquivo(caminho_arquivo: str | Path) -> str:
         ValueError: Se o nome do arquivo contiver caracteres inválidos.
         FileNotFoundError: Se o arquivo não for encontrado no caminho especificado.
     """
-    caminho = Path(caminho_arquivo)
+    caminho = Path(caminho_arquivo) if isinstance(caminho_arquivo, str) else caminho_arquivo
     if not nome_arquivo_valido(caminho.name):
         raise ValueError(f"Nome de arquivo inválido: {caminho.name}")
     if not caminho.is_file():
