@@ -115,9 +115,11 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
         for proteina in proteinas if proteina
     ]
 
+    proteina_gerada = '\n    '.join(previa_proteina) if previa_proteina else 'N/A'
+    
     print(f"DNA Processado ({len(cadeia_dna)} bases):\n    {previa_dna}")
     print(f"RNA Transcrito ({len(cadeia_rna)} bases):\n    {previa_rna}")
-    print(f"Proteína(s) Gerada(s):\n    {'\n    '.join(previa_proteina) if previa_proteina else 'N/A'}")
+    print(f"Proteína(s) Gerada(s):\n    {proteina_gerada}")
     print("=" * LARGURA_LINHA)
 
     # Passo 5: Salvando os resultados em arquivos de SAÍDA (output)
