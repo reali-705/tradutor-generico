@@ -75,7 +75,7 @@ def setup_parser() -> argparse.ArgumentParser:
 def processar_cadeia(dna: str, nome_base_arquivo: str):
     """
     Função central que executa o pipeline de transcrição e tradução para uma
-    dada cadeia de DNA.
+    dada cadeia de DNA e salva os arquivos de SAÍDA (output).
 
     Args:
         dna (str): A cadeia de DNA a ser processada.
@@ -115,17 +115,16 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
         for proteina in proteinas if proteina
     ]
 
-    print(f"DNA Gerado ({len(cadeia_dna)} bases):\n    {previa_dna}")
+    print(f"DNA Processado ({len(cadeia_dna)} bases):\n    {previa_dna}")
     print(f"RNA Transcrito ({len(cadeia_rna)} bases):\n    {previa_rna}")
     print(f"Proteína(s) Gerada(s):\n    {'\n    '.join(previa_proteina) if previa_proteina else 'N/A'}")
     print("=" * LARGURA_LINHA)
 
-    # Passo 5: Salvando os resultados em arquivos
+    # Passo 5: Salvando os resultados em arquivos de SAÍDA (output)
     print("\n-> Salvando arquivos de saída...")
-    escrever_arquivo(INPUT_PATH / f"{nome_base_arquivo}_dna.txt", cadeia_dna)
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_rna.txt", cadeia_rna)
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_proteina.txt", cadeia_proteina)
-    print("-> Arquivos salvos em 'data/input/' e 'data/output/'.")
+    print("-> Arquivos de RNA e Proteína salvos em 'data/output/'.")
 
 
 def main() -> None:
@@ -151,11 +150,17 @@ def main() -> None:
         if args.pseudoaleatorio is not None:
             print("\n" + " MODO: DNA PSEUDOALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_pseudoaleatorio(args.pseudoaleatorio)
+            # MELHORIA: Salva o DNA de ENTRADA aqui, no contexto da geração.
+            print("-> Salvando DNA gerado em 'data/input/'...")
+            escrever_arquivo(INPUT_PATH / "pseudoaleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "pseudoaleatorio")
 
         if args.aleatorio is not None:
             print("\n" + " MODO: DNA ALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_aleatorio(args.aleatorio)
+            # MELHORIA: Salva o DNA de ENTRADA aqui, no contexto da geração.
+            print("-> Salvando DNA gerado em 'data/input/'...")
+            escrever_arquivo(INPUT_PATH / "aleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "aleatorio")
 
         if args.ler_arquivo:
@@ -174,6 +179,7 @@ def main() -> None:
             print(f"-> Lendo arquivo: {caminho_final}")
             dna_lido = ler_arquivo(caminho_final)
             nome_base = caminho_final.stem
+            # A função processar_cadeia agora não tenta mais salvar o DNA de entrada.
             processar_cadeia(dna_lido, nome_base)
 
     except (ValueError, FileNotFoundError) as e:
