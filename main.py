@@ -179,7 +179,6 @@ def main() -> None:
             print(f"-> Lendo arquivo: {caminho_final}")
             dna_lido = ler_arquivo(caminho_final)
             nome_base = caminho_final.stem
-            # A função processar_cadeia agora não tenta mais salvar o DNA de entrada.
             processar_cadeia(dna_lido, nome_base)
 
     except (ValueError, FileNotFoundError) as e:
