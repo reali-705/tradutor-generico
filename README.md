@@ -161,13 +161,20 @@ Para remover arquivos gerados.
   python run.py clean -a
   ```
 
-## 👥 Equipe e Divisão de Tarefas
-O projeto foi desenvolvido pela seguinte equipe:
+## 👥 Origem e Autoria do Projeto
 
-- **Desenvolvimento do Código:**
-    - [Alessandro Reali Lopes Silva](https://github.com/reali-705)
-    - [Gian Victor Gonçalves Figueiredo](https://github.com/Gian-Figueiredo)
+Este projeto foi originalmente concebido e desenvolvido como um trabalho para a disciplina de **Linguagens Formais e Autômatos** na UFPA, com a colaboração da seguinte equipe:
+
+- **Desenvolvimento do Código Original:**
+  - [Alessandro Reali Lopes Silva](https://github.com/reali-705)
+  - [Gian Victor Gonçalves Figueiredo](https://github.com/Gian-Figueiredo)
 
 - **Elaboração do Artigo Científico:**
-    - [Jhonata Bezerra Figueiredo](https://github.com/Jhonatabz)
-    - [Felipe Lisboa Brasil](https://github.com/FelipeBrasill)
+  - [Jhonata Bezerra Figueiredo](https://github.com/Jhonatabz)
+  - [Felipe Lisboa Brasil](https://github.com/FelipeBrasill)
+
+---
+
+### 🍴 Novo Rumo (Fork)
+
+Este repositório é um **fork** do projeto acadêmico original e dá continuidade ao desenvolvimento de forma individual. O objetivo agora é expandir a base original para aprofundar os estudos, refatorar o código para maior eficiência e explorar novas ferramentas de programação.
