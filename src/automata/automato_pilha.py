@@ -1,58 +1,4 @@
-from typing import Iterable
-
-class Pushdown:
-    """
-    Implementa uma estrutura de dados de Pilha (Stack) LIFO (Last-In, First-Out).
-    
-    Esta classe auxiliar é usada como a memória principal do autômato de pilha.
-    """
-    def __init__(self, iteravel: Iterable = []):
-        """Inicializa a pilha, opcionalmente com elementos de um iterável."""
-        self.__pilha: list[str] = list(iteravel)
-        self.__length = len(self.__pilha)
-
-    def push(self, character: str):
-        """Adiciona um elemento no topo da pilha."""
-        self.__pilha.insert(0, character)
-        self.__length += 1
-    
-    def top(self) -> str:
-        """
-        Remove e retorna o elemento do topo da pilha (comportamento de 'pop').
-        
-        Raises:
-            Exception: Se a pilha estiver vazia.
-        """
-        if self.isEmpty():
-            raise Exception("Pilha vazia")
-        self.__length -= 1
-        return self.__pilha.pop(0)
-    
-    def clear(self):
-        """Remove todos os elementos da pilha."""
-        while self.__length != 0:
-            self.top()
-    
-    def isEmpty(self) -> bool:
-        """Verifica se a pilha está vazia."""
-        return self.__length == 0
-    
-    def tam(self) -> int:
-        """Retorna o número de elementos na pilha."""
-        return self.__length
-    
-    def __iter__(self):
-        """Permite a iteração sobre os elementos da pilha, do topo para a base."""
-        for char in self.__pilha:
-            yield char
-
 class Automato_Pilha_Deterministico_ε:
-    """
-    Implementa um Autômato de Pilha Determinístico com transições em vazio (DPDA-ε).
-
-    Um DPDA-ε é uma 7-tupla (Q, Σ, Γ, δ, q0, Z0, F) que reconhece linguagens
-    livres de contexto determinísticas.
-    """
     def __init__(self,
         Q: set[str],                                            # conjunto de estados
         Σ: set[str],                                            # alfabeto de entrada
@@ -62,115 +8,91 @@ class Automato_Pilha_Deterministico_ε:
         Z0: str,                                                # símbolo inicial da pilha
         F: set[str]                                             # estados finais
     ):
-        """
-        Inicializa e valida a definição formal do autômato de pilha.
-
-        Args:
-            Q: Conjunto de estados.
-            Σ: Alfabeto de entrada.
-            Γ: Alfabeto da pilha.
-            δ: Função de transição mapeando (estado, símbolo_entrada, topo_pilha) -> (novo_estado, [simbolos_a_empilhar]).
-               Para transições em vazio, o símbolo_entrada deve ser "".
-            q0: Estado inicial.
-            Z0: Símbolo inicial da pilha.
-            F: Conjunto de estados de aceitação.
-        
-        Raises:
-            TypeError: Se a definição do autômato for inconsistente.
-        """
-        # --- Atribuição dos Componentes ---
-#------------------------------------------------------------------------------------#
-        self.__pilha = Pushdown()
-        self.__estados = Q
-        self.__simbolo_inicial_pilha = Z0
-        self.__alfabeto_entrada = Σ
-        self.__transicoes = δ
-        self.__alfabeto_pilha = Γ
-        self.__estado_inicial = q0
-        self.__estados_finais = F
-        
-        if self.__estado_inicial not in self.__estados:
+        if q0 not in Q:
             raise TypeError("Estado inicial não pertence ao conjunto dos estados")
         
-        if not self.__estados_finais.issubset(self.__estados):
+        if not F.issubset(Q):
             raise TypeError("Conjunto dos estados finais não é subconjunto dos estados")
         
-        if (self.__simbolo_inicial_pilha not in self.__alfabeto_pilha):
+        if (Z0 not in Γ):
             raise TypeError("Símbolo inicial da pilha não pertence ao alfabeto da pilha")
         
-        
-        for trinca in self.__transicoes.keys():
-            if trinca[0] not in self.__estados:
-                error = f"A transição {trinca} -> {self.__transicoes[trinca]}. {trinca[0]} não pertence ao conjunto de estados"
-                raise TypeError(error)
-                
-            if trinca[1] not in self.__alfabeto_entrada and trinca[1] != "":
-                erro = f"A transição {trinca} -> {self.__transicoes[trinca]}. {trinca[1]} não pertence ao alfabeto de entrada"
-                raise TypeError(erro)
+        for (estado_origem, simbolo_entrada, simbolo_pilha), (estado_destino, simbolos_pilha) in δ.items():
+            trinca = (estado_origem, simbolo_entrada, simbolo_pilha)
+            dupla = (estado_destino, simbolos_pilha)
+            if estado_origem not in Q:
+                raise TypeError(f"A transição {trinca} -> {dupla}. {estado_origem} não pertence ao conjunto de estados")
 
-            if trinca[2] not in self.__alfabeto_pilha:
-                erro = f"A transição {trinca} -> {self.__transicoes[trinca]}. {trinca[2]} não pertence ao alfabeto da pilha"
-                raise TypeError(erro)
-     
-    def __inicializar(self):
-        """(Privado) Reseta o autômato para sua configuração inicial."""
-        self.__pilha.clear()
-        self.__pilha.push(self.__simbolo_inicial_pilha)
-        
-    def cadeia_saida(self) -> str:
-        """
-        Retorna o conteúdo final da pilha como uma string.
-        
-        No contexto do ribossomo, isso representa a sequência de proteínas traduzidas.
-        """
-        return "".join(self.__pilha)
-    
+            if simbolo_entrada not in Σ:
+                raise TypeError(f"A transição {trinca} -> {dupla}. {simbolo_entrada} não pertence ao alfabeto de entrada")
+
+            if simbolo_pilha not in Γ:
+                raise TypeError(f"A transição {trinca} -> {dupla}. {simbolo_pilha} não pertence ao alfabeto da pilha")
+            
+            if estado_destino not in Q:
+                raise TypeError(f"A transição {trinca} -> {dupla}. {estado_destino} não pertence ao conjunto de estados")
+            
+            if not set(simbolos_pilha).issubset(Γ):
+                raise TypeError(f"A transição {trinca} -> {dupla}. {simbolos_pilha} não pertence(m) ao alfabeto da pilha")
+
+        self.estados = Q
+        self.alfabeto_entrada = Σ
+        self.alfabeto_pilha = Γ
+        self.transicoes = δ
+        self.estado_inicial = q0
+        self.estado_inicial_pilha = Z0
+        self.estados_finais = F
+
+    def _transitar(self, trinca: tuple[str, str, str], pilha: list[str]) -> str:
+        novo_estado, novos_simbolos_pilha = self.transicoes[trinca]
+        if novos_simbolos_pilha:
+            pilha.extend(novos_simbolos_pilha[::-1])
+        return novo_estado
+
     def validar(self, cadeia: str) -> bool:
-        """
-        Processa uma cadeia de entrada para determinar se ela é aceita pelo autômato.
-
-        Args:
-            cadeia (str): A cadeia de entrada a ser validada.
-
-        Returns:
-            bool: True se a cadeia for aceita, False caso contrário.
-        """
-        self.__inicializar()
-        estado_atual = self.__estado_inicial
-        n = 0
+        estado_atual = self.estado_inicial
+        pilha = [self.estado_inicial_pilha] 
         
-        # Loop principal: consome a cadeia de entrada
-        while n < len(cadeia):
-            if self.__pilha.isEmpty():
-                #Caso a pilha esteja vazia antes do fim da cadeia, ele limpa a pilha e retorna falso
-                self.__pilha.clear()
-                return False
+        indice_cadeia = 0
+        while indice_cadeia < len(cadeia):
+            simbolo_entrada = cadeia[indice_cadeia]
+            if simbolo_entrada not in self.alfabeto_entrada:
+                return False # Símbolo inválido
+
+            topo_pilha = pilha[-1] if pilha else None
+
+            trinca_com_entrada = (estado_atual, simbolo_entrada, topo_pilha)
+            trinca_sem_entrada = (estado_atual, None, topo_pilha)
+
+            if trinca_com_entrada in self.transicoes:
+                # Prioriza consumir um símbolo da entrada se possível
+                pilha.pop()
+                estado_atual = self._transitar(trinca_com_entrada, pilha)
+                indice_cadeia += 1 # Avança na cadeia de entrada
             
-            trinca = (estado_atual, cadeia[n], self.__pilha.top())
-            dupla = self.__transicoes.get(trinca, None)
+            elif trinca_sem_entrada in self.transicoes:
+                # Se não há transição para a entrada, tenta uma transição ε
+                pilha.pop()
+                estado_atual = self._transitar(trinca_sem_entrada, pilha)
+                # Não incrementa o indice_cadeia, pois não consumiu entrada
             
-            if dupla == None:
-                dupla = self.__transicoes.get((trinca[0], "", trinca[2]), None)
-                if dupla == None:
-                    #Caso não existe transições para essa trinca, ele limpa a pilha e retorna falso
-                    self.__pilha.clear()
-                    return False
             else:
-                n += 1
-            
-            estado_atual = dupla[0]
-            for character in dupla[1]:
-                self.__pilha.push(character)
-             
-        while not (estado_atual in self.__estados_finais or self.__pilha.isEmpty()):
-            trinca = (estado_atual, "", self.__pilha.top())
-            dupla = self.__transicoes.get(trinca, None)
-            if dupla == None:
-                #Caso não exista transção em vazio com esse estado atual e essa símbolo no topo da pilha, retorna falso
-                self.__pilha.clear()
+                # Nenhuma transição possível, a cadeia é rejeitada
                 return False
-            estado_atual = dupla[0]
-            for character in dupla[1]:
-                self.__pilha.push(character)
-                
-        return True
+
+        # Após consumir toda a cadeia, processa as transições ε restantes
+        while True:
+            topo_pilha = pilha[-1] if pilha else None
+            # Apenas transições sem entrada (ε) são possíveis aqui
+            trinca_sem_entrada = (estado_atual, None, topo_pilha)
+            
+            if trinca_sem_entrada in self.transicoes:
+                pilha.pop()
+                estado_atual = self._transitar(trinca_sem_entrada, pilha)
+            else:
+                break # Sai do loop se não houver mais transições ε
+
+        # A cadeia é válida se, no final, o estado atual for um estado final
+        # E a pilha estiver vazia (aceitação por estado final E pilha vazia)
+        # Ou apenas por estado final, dependendo da definição. Vamos usar apenas estado final.
+        return estado_atual in self.estados_finais
