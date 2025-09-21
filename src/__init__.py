@@ -42,85 +42,66 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
 
 
 def criar_ribossomo() -> Automato_Pilha:
-    """
-    Cria e retorna uma instância do Automato_Pilha que simula
-    um ribossomo, traduzindo uma fita de RNA em uma sequência de aminoácidos.
+    aminoacidos = set(TABELA_CODONS.values())
+    Q = {'q_inicial', 'q_achouA', 'q_achouAU', 'q_traduz', 'q_baseXA', 'q_baseXU', 'q_baseXC', 'q_baseXG', 'q_rollback', 'q_final'}
+    Σ = {'A', 'C', 'G', 'U'}
+    q0 = 'q_inicial'
+    Z0 = 'Z0'
+    F = {'q_final'}
+    Γ = aminoacidos + Σ + {Z0} + {None}
+    δ = {}
 
-    Lógica do Autômato:
-    1.  **Busca (q0-q2):** Procura pelo códon de início 'AUG'.
-    2.  **Tradução (q3-q16):** Ao encontrar 'AUG', entra em modo de tradução, lendo
-        códons de 3 bases e empilhando os aminoácidos correspondentes.
-    3.  **Pós-Tradução (q17-q19):** Ao encontrar um códon de parada ('UAA', 'UAG', 'UGA'),
-        para de traduzir e volta a buscar um novo 'AUG'.
-    4.  **Aceitação (q20):** Atinge o estado final se a fita terminar de forma válida.
-
-    Returns:
-        Automato_Pilha: Uma instância configurada pronta para traduzir RNA.
-    """
-    # Q: Conjunto de estados.
-        # q0-q2: Busca por 'AUG'.
-        # q3: Estado principal de tradução.
-        # q4-q16: Estados intermediários para reconhecer códons.
-        # q17-q19: Busca por 'AUG' após um códon de parada.
-        # q20: Estado final.
-    Q = {f"q{i}" for i in range(21)}
+    # fase de busca pelo códon de início (AUG)
+    estados_busca = {'q_inicial', 'q_achouA', 'q_achouAU'}
+    for base in Σ:
+        for estado in estados_busca:
+            # filtro para que toda leitura que não seja A na fase de busca volte para o estado inicial
+            if base != 'A':
+                δ[(estado, base, Z0)] = ('q_inicial', [Z0])
+            # filtro caso a leitura seja A, segue para o estado q_achouA
+            else:
+                δ[(estado, base, Z0)] = ('q_achouA', [Z0])
+            # transições específicas para parte do códon de início (AUG)
+            if estado == 'q_achouA' and base == 'U':
+                δ[(estado, base, Z0)] = ('q_achouAU', [Z0])
+            # transição final do códon de início (AUG)
+            if estado == 'q_achouAU' and base == 'G':
+                δ[(estado, base, Z0)] = ('q_traduz', ['Met', Z0])
     
-    # Σ: Alfabeto de entrada (bases do RNA).
-    Σ = {"U", "A", "G", "C"}
+    # fase de tradução dos códons
+    for base1 in Σ:
+        # transição referente à leitura da primeira base do códon
+        δ[('q_traduz', base1, Z0)] = ('q_traduz', [base1])
+        for base2 in Σ:
+            # transição referente à leitura da segunda base do códon
+            δ[('q_traduz', base2, base1)] = (f'q_baseX{base2}', [base1])
+            for base3 in Σ:
+                # transição referente à leitura da terceira base do códon
+                aminoacido = TABELA_CODONS[f'{base1}{base2}{base3}']
+                # se for um códon de parada, volta para o estado inicial
+                if aminoacido == 'Stop':
+                    δ[(f'q_baseX{base2}', base3, base1)] = ('q_inicial', ['Stop', Z0])
+                # se for um aminoácido, empilha o aminoácido e Z0
+                else:
+                    δ[(f'q_baseX{base2}', base3, base1)] = ('q_traduz', [aminoacido, Z0])
     
-    # Γ: Alfabeto da pilha.
-    # Inclui o marcador inicial 'Z0', o separador de proteínas ' ', o marcador de tradução '-' e os nomes dos aminoácidos invertidos.
-    Γ = {"Z0", " ", "-", "teM", "ehP", "ueL", "elI", "laV", "reS", "orP", "rhT", "alA", "ryT", "siH", "nlG", "nsA", "syL", "psA", "ulG", "syC", "prT", "grA", "ylG"}
-    
-    # δ: Função de transição. Mapeia (estado, símbolo_lido, topo_pilha) -> (novo_estado, [empilhar]).
-    # A lógica da tradução genética está codificada aqui.
-    δ = {
-        # --- Fase 1: Buscando o primeiro AUG ---
-        ("q0", "A", "Z0"): ("q1", ["Z0"]), ("q0", "U", "Z0"): ("q0", ["Z0"]), ("q0", "G", "Z0"): ("q0", ["Z0"]), ("q0", "C", "Z0"): ("q0", ["Z0"]),
-        ("q1", "U", "Z0"): ("q2", ["Z0"]), ("q1", "A", "Z0"): ("q1", ["Z0"]), ("q1", "G", "Z0"): ("q0", ["Z0"]), ("q1", "C", "Z0"): ("q0", ["Z0"]),
-        ("q2", "G", "Z0"): ("q3", ["teM", "-"]), ("q2", "A", "Z0"): ("q1", ["Z0"]), ("q2", "U", "Z0"): ("q0", ["Z0"]), ("q2", "C", "Z0"): ("q0", ["Z0"]),
+    # fase de rollback (desempilha os aminoacidos que não formaram uma proteina completa)
+    δ[('q_traduz', None, Z0)] = ('q_rollback', []) # base0, vai direto pro rollback
+    for base in Σ:
+        δ[('q_traduz', None, base)] = ('q_rollback', []) # base1, apaga a base1 e vai pro rollback
+        for base_estado in Σ:
+            δ[(f'q_baseX{base_estado}', None, base)] = ('q_rollback', []) # baseX, apaga a base1 e a baseX depois vai pro rollback
 
-        # --- Fase 2: Traduzindo o corpo do gene (a partir de q3) ---
-        # Códon de Início (Metionina)
-        ("q3", "A", "-"): ("q9", ["-"]), ("q3", "C", "-"): ("q4", ["-"]), ("q3", "G", "-"): ("q7", ["-"]), ("q3", "U", "-"): ("q13", ["-"]),
-        
-        # Bloco C (q4) -> Pro, Arg, His, Gln
-        ("q4", "A", "-"): ("q6", ["-"]), ("q4", "C", "-"): ("q5", ["-", "orP", "-"]), ("q4", "G", "-"): ("q5", ["-", "grA", "-"]), ("q4", "U", "-"): ("q5", ["-", "ueL", "-"]),
-        ("q6", "A", "-"): ("q3", ["-", "nlG", "-"]), ("q6", "C", "-"): ("q3", ["-", "siH", "-"]), ("q6", "G", "-"): ("q3", ["-", "nlG", "-"]), ("q6", "U", "-"): ("q3", ["-", "siH", "-"]),
+    for aminoacido in aminoacidos:
+        if aminoacido == 'Stop':
+            δ[('q_rollback', None, aminoacido)] = ('q_rollback', [Z0]) # desempilha o Stop e empilha Z0
+        else:
+            δ[('q_rollback', None, aminoacido)] = ('q_rollback', []) # desempilha o aminoacido e continua no rollback
 
-        # Bloco Curinga
-        # Nas nossas pesquisas percebe-se que existe aminoácidos que são determinados apenas com duas bases
-        # Logo, criamos o estado q5 para servir de curinga , então assim que cair nesses aminoácidos, eles levarão a q5
-        # E q5 só consumirá a última base e retornará para q3
-        ("q5", "A", "-"): ("q3", ["-"]), ("q5", "C", "-"): ("q3", ["-"]), ("q5", "G", "-"): ("q3", ["-"]), ("q5", "U", "-"): ("q3", ["-"]),
-        
-        # Bloco G (q7) -> Val, Ala, Gly, Asp, Glu
-        ("q7", "A", "-"): ("q8", ["-"]), ("q7", "C", "-"): ("q5", ["-", "alA", "-"]), ("q7", "G", "-"): ("q5", ["-", "ylG", "-"]), ("q7", "U", "-"): ("q5", ["-", "laV", "-"]),
-        ("q8", "A", "-"): ("q3", ["-", "ulG", "-"]), ("q8", "C", "-"): ("q3", ["-", "psA", "-"]), ("q8", "G", "-"): ("q3", ["-", "ulG", "-"]), ("q8", "U", "-"): ("q3", ["-", "psA", "-"]),
+    # fase de finalização (aceitação)
+    δ[('q_rollback', None, Z0)] = ('q_final', []) # desempilha o Z0 e vai para o estado final
+    for estado in estados_busca:
+        δ[(estado, None, Z0)] = ('q_final', []) # aceita se estiver na fase de busca e a pilha só tiver Z0
 
-        # Bloco A (q9) -> Thr, Ser, Arg, Asn, Lys, Met, Ile
-        ("q9", "A", "-"): ("q11", ["-"]), ("q9", "C", "-"): ("q5", ["-", "rhT", "-"]), ("q9", "G", "-"): ("q10", ["-"]), ("q9", "U", "-"): ("q12", ["-"]),
-        ("q10", "A", "-"): ("q3", ["-", "grA", "-"]), ("q10", "C", "-"): ("q3", ["-", "reS", "-"]), ("q10", "G", "-"): ("q3", ["-", "grA", "-"]), ("q10", "U", "-"): ("q3", ["-", "reS", "-"]),
-        ("q11", "A", "-"): ("q3", ["-", "syL", "-"]), ("q11", "C", "-"): ("q3", ["-", "nsA", "-"]), ("q11", "G", "-"): ("q3", ["-", "syL", "-"]), ("q11", "U", "-"): ("q3", ["-", "nsA", "-"]),
-        ("q12", "A", "-"): ("q3", ["-", "elI", "-"]), ("q12", "C", "-"): ("q3", ["-", "elI", "-"]), ("q12", "G", "-"): ("q3", ["-", "teM", "-"]), ("q12", "U", "-"): ("q3", ["-", "elI", "-"]),
 
-        # Bloco U (q13) -> Ser, Phe, Leu, Tyr, Cys, Trp, STOP
-        ("q13", "A", "-"): ("q15", ["-"]), ("q13", "C", "-"): ("q5", ["-", "reS", "-"]), ("q13", "G", "-"): ("q16", ["-"]), ("q13", "U", "-"): ("q14", ["-"]),
-        ("q14", "A", "-"): ("q3", ["-", "ueL", "-"]), ("q14", "C", "-"): ("q3", ["-", "ehP", "-"]), ("q14", "G", "-"): ("q3", ["-", "ueL", "-"]), ("q14", "U", "-"): ("q3", ["-", "ehP", "-"]),
-        ("q15", "C", "-"): ("q3", ["-", "ryT", "-"]), ("q15", "U", "-"): ("q3", ["-", "ryT", "-"]), ("q15", "A", "-"): ("q17", [" "]), ("q15", "G", "-"): ("q17", [" "]), # STOP
-        ("q16", "A", "-"): ("q17", [" "]), ("q16", "C", "-"): ("q3", ["-", "syC", "-"]), ("q16", "G", "-"): ("q3", ["-", "prT", "-"]), ("q16", "U", "-"): ("q3", ["-", "syC", "-"]), # STOP
-
-        # --- Fase 3: Buscando novo AUG após um STOP (a partir de q17) ---
-        ("q17", "A", " "): ("q18", [" "]), ("q17", "U", " "): ("q17", [" "]), ("q17", "G", " "): ("q17", [" "]), ("q17", "C", " "): ("q17", [" "]),
-        ("q18", "U", " "): ("q19", [" "]), ("q18", "A", " "): ("q18", [" "]), ("q18", "G", " "): ("q17", [" "]), ("q18", "C", " "): ("q17", [" "]),
-        ("q19", "G", " "): ("q3", [" ", "teM", "-"]), # Encontrou novo AUG, volta a traduzir
-        ("q19", "A", " "): ("q18", [" "]), ("q19", "U", " "): ("q17", [" "]), ("q19", "C", " "): ("q17", [" "]),
-
-        # --- Fase 4: Transições em vazio para o estado final ---
-        ("q17", "", " "): ("q20", []), ("q18", "", " "): ("q20", []), ("q19", "", " "): ("q20", []),
-    }
-    q0 = "q0"
-    Z0 = "Z0"
-    F = {"q20"}
-    
     return Automato_Pilha(Q, Σ, Γ, δ, q0, Z0, F)
