@@ -44,11 +44,11 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
 def criar_ribossomo() -> Automato_Pilha:
     aminoacidos = set(TABELA_CODONS.values())
     Q = {'q_inicial', 'q_achouA', 'q_achouAU', 'q_traduz', 'q_baseXA', 'q_baseXU', 'q_baseXC', 'q_baseXG', 'q_rollback', 'q_final'}
-    Σ = {'A', 'C', 'G', 'U'}
+    Σ = {'A', 'C', 'G', 'U', None}
     q0 = 'q_inicial'
     Z0 = 'Z0'
     F = {'q_final'}
-    Γ = aminoacidos + Σ + {Z0} + {None}
+    Γ = aminoacidos.union(Σ).union({Z0}).union({None})
     δ = {}
 
     # fase de busca pelo códon de início (AUG)
@@ -69,13 +69,14 @@ def criar_ribossomo() -> Automato_Pilha:
                 δ[(estado, base, Z0)] = ('q_traduz', ['Met', Z0])
     
     # fase de tradução dos códons
-    for base1 in Σ:
+    bases = {'A', 'U', 'C', 'G'}
+    for base1 in bases:
         # transição referente à leitura da primeira base do códon
         δ[('q_traduz', base1, Z0)] = ('q_traduz', [base1])
-        for base2 in Σ:
+        for base2 in bases:
             # transição referente à leitura da segunda base do códon
             δ[('q_traduz', base2, base1)] = (f'q_baseX{base2}', [base1])
-            for base3 in Σ:
+            for base3 in bases:
                 # transição referente à leitura da terceira base do códon
                 aminoacido = TABELA_CODONS[f'{base1}{base2}{base3}']
                 # se for um códon de parada, volta para o estado inicial
@@ -87,9 +88,9 @@ def criar_ribossomo() -> Automato_Pilha:
     
     # fase de rollback (desempilha os aminoacidos que não formaram uma proteina completa)
     δ[('q_traduz', None, Z0)] = ('q_rollback', []) # base0, vai direto pro rollback
-    for base in Σ:
+    for base in bases:
         δ[('q_traduz', None, base)] = ('q_rollback', []) # base1, apaga a base1 e vai pro rollback
-        for base_estado in Σ:
+        for base_estado in bases:
             δ[(f'q_baseX{base_estado}', None, base)] = ('q_rollback', []) # baseX, apaga a base1 e a baseX depois vai pro rollback
 
     for aminoacido in aminoacidos:
@@ -100,6 +101,7 @@ def criar_ribossomo() -> Automato_Pilha:
 
     # fase de finalização (aceitação)
     δ[('q_rollback', None, Z0)] = ('q_final', []) # desempilha o Z0 e vai para o estado final
+    δ[('q_rollback', None, None)] = ('q_final', []) # aceita se a pilha estiver vazia
     for estado in estados_busca:
         δ[(estado, None, Z0)] = ('q_final', []) # aceita se estiver na fase de busca e a pilha só tiver Z0
 
