@@ -59,37 +59,36 @@ class Automato_Pilha:
             if simbolo_entrada not in self.alfabeto_entrada:
                 return False # Símbolo inválido
 
-            topo_pilha = pilha[-1] if pilha else None
+            topo_pilha = pilha.pop() if pilha else None
 
             trinca_com_entrada = (estado_atual, simbolo_entrada, topo_pilha)
             trinca_sem_entrada = (estado_atual, None, topo_pilha)
 
             if trinca_com_entrada in self.transicoes:
                 # Prioriza consumir um símbolo da entrada se possível
-                pilha.pop()
                 estado_atual = self._transitar(trinca_com_entrada, pilha)
                 indice_cadeia += 1 # Avança na cadeia de entrada
             
             elif trinca_sem_entrada in self.transicoes:
                 # Se não há transição para a entrada, tenta uma transição ε
-                pilha.pop()
                 estado_atual = self._transitar(trinca_sem_entrada, pilha)
                 # Não incrementa o indice_cadeia, pois não consumiu entrada
             
             else:
+                pilha.append(topo_pilha) if topo_pilha else None
                 # Nenhuma transição possível, a cadeia é rejeitada
                 return False
 
         # Após consumir toda a cadeia, processa as transições ε restantes
         while True:
-            topo_pilha = pilha[-1] if pilha else None
+            topo_pilha = pilha.pop() if pilha else None
             # Apenas transições sem entrada (ε) são possíveis aqui
             trinca_sem_entrada = (estado_atual, None, topo_pilha)
             
             if trinca_sem_entrada in self.transicoes:
-                pilha.pop()
                 estado_atual = self._transitar(trinca_sem_entrada, pilha)
             else:
+                pilha.append(topo_pilha) if topo_pilha else None
                 break # Sai do loop se não houver mais transições ε
 
         # A cadeia é válida se, no final, o estado atual for um estado final
@@ -107,34 +106,33 @@ class Automato_Pilha:
             if simbolo_entrada not in self.alfabeto_entrada:
                 raise ValueError(f"Símbolo '{simbolo_entrada}' na cadeia de entrada não pertence ao alfabeto de entrada Σ.")
             
-            topo_pilha = pilha[-1] if pilha else None
+            topo_pilha = pilha.pop() if pilha else None
 
             trinca_com_entrada = (estado_atual, simbolo_entrada, topo_pilha)
             trinca_sem_entrada = (estado_atual, None, topo_pilha)
 
             if trinca_com_entrada in self.transicoes:
-                pilha.pop()
                 estado_atual = self._transitar(trinca_com_entrada, pilha)
                 indice_cadeia += 1
             
             elif trinca_sem_entrada in self.transicoes:
-                pilha.pop()
                 estado_atual = self._transitar(trinca_sem_entrada, pilha)
             
             else:
+                pilha.append(topo_pilha) if topo_pilha else None
                 # Na transcrição, se não houver regra, simplesmente avançamos,
                 # permitindo que o autômato ignore "lixo" entre os genes.
                 indice_cadeia += 1
 
         # Após consumir toda a cadeia, processa as transições ε restantes (incluindo a limpeza)
         while estado_atual not in self.estados_finais:
-            topo_pilha = pilha[-1] if pilha else None
+            topo_pilha = pilha.pop() if pilha else None
             trinca_sem_entrada = (estado_atual, None, topo_pilha)
             
             if trinca_sem_entrada in self.transicoes:
-                pilha.pop()
                 estado_atual = self._transitar(trinca_sem_entrada, pilha)
             else:
+                pilha.append(topo_pilha) if topo_pilha else None
                 # Se não há mais transições ε e não estamos no estado final,
                 # isso indica um erro no design do autômato.
                 raise RuntimeError(f"Autômato travado no estado '{estado_atual}' sem mais transições ε para chegar a um estado final.")
