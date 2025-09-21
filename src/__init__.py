@@ -6,7 +6,7 @@ disponibilizando as principais funções e classes para serem importadas
 em outras partes do projeto.
 """
 
-from .automata import TransdutorFinito, Automato_Pilha_Deterministico_ε
+from .automata import TransdutorFinito, Automato_Pilha
 from .utils import gerar_dna_aleatorio, gerar_dna_pseudoaleatorio, ler_arquivo, escrever_arquivo
 from .tabela_codons import TABELA_CODONS
 
@@ -41,9 +41,9 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
     return TransdutorFinito(Q, Σ, Γ, δ, λ, q0)
 
 
-def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
+def criar_ribossomo() -> Automato_Pilha:
     """
-    Cria e retorna uma instância do Automato_Pilha_Deterministico_ε que simula
+    Cria e retorna uma instância do Automato_Pilha que simula
     um ribossomo, traduzindo uma fita de RNA em uma sequência de aminoácidos.
 
     Lógica do Autômato:
@@ -55,7 +55,7 @@ def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
     4.  **Aceitação (q20):** Atinge o estado final se a fita terminar de forma válida.
 
     Returns:
-        Automato_Pilha_Deterministico_ε: Uma instância configurada pronta para traduzir RNA.
+        Automato_Pilha: Uma instância configurada pronta para traduzir RNA.
     """
     # Q: Conjunto de estados.
         # q0-q2: Busca por 'AUG'.
@@ -123,4 +123,4 @@ def criar_ribossomo() -> Automato_Pilha_Deterministico_ε:
     Z0 = "Z0"
     F = {"q20"}
     
-    return Automato_Pilha_Deterministico_ε(Q, Σ, Γ, δ, q0, Z0, F)
+    return Automato_Pilha(Q, Σ, Γ, δ, q0, Z0, F)

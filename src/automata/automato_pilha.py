@@ -1,4 +1,4 @@
-class Automato_Pilha_Deterministico_ε:
+class Automato_Pilha:
     def __init__(self,
         Q: set[str],                                            # conjunto de estados
         Σ: set[str],                                            # alfabeto de entrada
@@ -46,7 +46,7 @@ class Automato_Pilha_Deterministico_ε:
     def _transitar(self, trinca: tuple[str, str, str], pilha: list[str]) -> str:
         novo_estado, novos_simbolos_pilha = self.transicoes[trinca]
         if novos_simbolos_pilha:
-            pilha.extend(novos_simbolos_pilha[::-1])
+            pilha.extend(novos_simbolos_pilha)
         return novo_estado
 
     def validar(self, cadeia: str) -> bool:
@@ -96,3 +96,47 @@ class Automato_Pilha_Deterministico_ε:
         # E a pilha estiver vazia (aceitação por estado final E pilha vazia)
         # Ou apenas por estado final, dependendo da definição. Vamos usar apenas estado final.
         return estado_atual in self.estados_finais
+
+    def transcrever_pilha(self, cadeia: str) -> list[str]:
+        estado_atual = self.estado_inicial
+        pilha = [self.estado_inicial_pilha]
+        
+        indice_cadeia = 0
+        while indice_cadeia < len(cadeia):
+            simbolo_entrada = cadeia[indice_cadeia]
+            if simbolo_entrada not in self.alfabeto_entrada:
+                raise ValueError(f"Símbolo '{simbolo_entrada}' na cadeia de entrada não pertence ao alfabeto de entrada Σ.")
+            
+            topo_pilha = pilha[-1] if pilha else None
+
+            trinca_com_entrada = (estado_atual, simbolo_entrada, topo_pilha)
+            trinca_sem_entrada = (estado_atual, None, topo_pilha)
+
+            if trinca_com_entrada in self.transicoes:
+                pilha.pop()
+                estado_atual = self._transitar(trinca_com_entrada, pilha)
+                indice_cadeia += 1
+            
+            elif trinca_sem_entrada in self.transicoes:
+                pilha.pop()
+                estado_atual = self._transitar(trinca_sem_entrada, pilha)
+            
+            else:
+                # Na transcrição, se não houver regra, simplesmente avançamos,
+                # permitindo que o autômato ignore "lixo" entre os genes.
+                indice_cadeia += 1
+
+        # Após consumir toda a cadeia, processa as transições ε restantes (incluindo a limpeza)
+        while estado_atual not in self.estados_finais:
+            topo_pilha = pilha[-1] if pilha else None
+            trinca_sem_entrada = (estado_atual, None, topo_pilha)
+            
+            if trinca_sem_entrada in self.transicoes:
+                pilha.pop()
+                estado_atual = self._transitar(trinca_sem_entrada, pilha)
+            else:
+                # Se não há mais transições ε e não estamos no estado final,
+                # isso indica um erro no design do autômato.
+                raise RuntimeError(f"Autômato travado no estado '{estado_atual}' sem mais transições ε para chegar a um estado final.")
+            
+        return pilha
