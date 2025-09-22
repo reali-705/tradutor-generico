@@ -33,13 +33,13 @@ BASES_ALEATORIO_DEFAULT = 10000
 
 def setup_parser() -> argparse.ArgumentParser:
     """
-    Configura o parser de argumentos da linha de comando.
+    Configura e retorna o parser de argumentos da linha de comando.
     
-    Define os argumentos -p, -a, e -l, que podem ser usados em conjunto
-    para executar múltiplas tarefas.
-    
+    Define os argumentos que o usuário pode passar ao script, como -p, -a, e -l,
+    juntamente com suas ajudas e comportamentos.
+
     Returns:
-        argparse.ArgumentParser: O objeto parser configurado.
+        argparse.ArgumentParser: O objeto parser configurado e pronto para uso.
     """
     parser = argparse.ArgumentParser(
         description="Tradutor Genético: Converte DNA em Proteínas usando Teoria dos Autômatos.",
@@ -76,8 +76,10 @@ def setup_parser() -> argparse.ArgumentParser:
 
 def processar_cadeia(dna: str, nome_base_arquivo: str):
     """
-    Função central que executa o pipeline de transcrição e tradução para uma
-    dada cadeia de DNA e salva os arquivos de SAÍDA (output).
+    Executa o pipeline completo de processamento para uma cadeia de DNA.
+
+    Esta função orquestra a validação, transcrição para RNA, tradução para
+    proteína, exibição dos resultados e salvamento dos arquivos de saída.
 
     Args:
         dna (str): A cadeia de DNA a ser processada.
@@ -109,8 +111,8 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
     else:
         logging.warning("Nenhuma estrutura de gene válida (AUG...STOP) foi encontrada no RNA. Nenhuma proteína foi produzida.")
 
-    # Passo 4: Exibição dos resultados no terminal
-    print(" RESULTADOS ".center(LARGURA_LINHA, "="))
+    # Passo 4: Exibição dos resultados formatados no terminal
+    print("\n" + " RESULTADOS ".center(LARGURA_LINHA, "="))
     previa_dna = f"{cadeia_dna[:PREVIA_CADEIA]}..." if len(cadeia_dna) > PREVIA_CADEIA else cadeia_dna
     previa_rna = f"{cadeia_rna[:PREVIA_CADEIA]}..." if len(cadeia_rna) > PREVIA_CADEIA else cadeia_rna
     proteinas = cadeia_proteina.split(" ")
@@ -126,11 +128,11 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
     print(f"Proteína(s) Gerada(s):\n    {proteina_gerada}")
     print("=" * LARGURA_LINHA)
 
-    # Passo 5: Salvando os resultados em arquivos de SAÍDA (output)
+    # Passo 5: Salvando os resultados em arquivos de saída
     logging.info("Salvando arquivos de saída...")
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_rna.txt", cadeia_rna)
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_proteina.txt", cadeia_proteina)
-    logging.info("Arquivos de RNA e Proteína salvos em 'data/output/'.")
+    logging.info(f"Arquivos de RNA e Proteína salvos em '{OUTPUT_PATH}'.")
 
 
 def main() -> None:
@@ -140,15 +142,16 @@ def main() -> None:
     Orquestra a análise dos argumentos da linha de comando e executa as
     tarefas solicitadas na ordem definida: pseudoaleatório, aleatório e leitura de arquivo.
     """
-    # 2. Configure o logging básico aqui, no início da sua aplicação.
+    # Configura o sistema de logging para toda a aplicação.
     logging.basicConfig(
-        level=logging.INFO,  # Nível mínimo de mensagens a serem exibidas.
+        level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%H:%M:%S'
     )
 
     parser = setup_parser()
     
+    # Se nenhum argumento for passado, exibe a ajuda e encerra.
     if len(sys.argv) == 1:
         parser.print_help()
         logging.error("Você deve fornecer pelo menos uma ação (-p, -a, ou -l).")
@@ -158,24 +161,28 @@ def main() -> None:
     logging.info("Início da Execução")
 
     try:
+        # Executa a tarefa de geração de DNA pseudoaleatório se solicitada.
         if args.pseudoaleatorio is not None:
             print("\n" + " MODO: DNA PSEUDOALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_pseudoaleatorio(args.pseudoaleatorio)
-            logging.info("Salvando DNA gerado em 'data/input/'...")
+            logging.info(f"Salvando DNA gerado em '{INPUT_PATH}'...")
             escrever_arquivo(INPUT_PATH / "pseudoaleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "pseudoaleatorio")
 
+        # Executa a tarefa de geração de DNA aleatório se solicitada.
         if args.aleatorio is not None:
             print("\n" + " MODO: DNA ALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_aleatorio(args.aleatorio)
-            logging.info("Salvando DNA gerado em 'data/input/'...")
+            logging.info(f"Salvando DNA gerado em '{INPUT_PATH}'...")
             escrever_arquivo(INPUT_PATH / "aleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "aleatorio")
 
+        # Executa a tarefa de leitura de arquivo se solicitada.
         if args.ler_arquivo:
             print("\n" + " MODO: LEITURA DE ARQUIVO ".center(LARGURA_LINHA, "#"))
             
             caminho_proposto = Path(args.ler_arquivo)
+            # Tenta encontrar o arquivo no diretório de input se não for encontrado no caminho exato.
             if not caminho_proposto.exists():
                 caminho_final = INPUT_PATH / caminho_proposto.with_suffix('.txt').name
             else:
@@ -190,13 +197,17 @@ def main() -> None:
             processar_cadeia(dna_lido, nome_base)
 
     except (ValueError, FileNotFoundError) as e:
+        # Captura erros esperados (ex: DNA inválido, arquivo não encontrado) e os loga como erro.
         logging.error(f"{e}")
     except Exception as e:
+        # Captura qualquer outro erro inesperado e o loga como crítico, incluindo o traceback.
         logging.critical(f"Ocorreu um erro inesperado: {e}", exc_info=True)
     finally:
+        # Esta mensagem será logada sempre, mesmo que ocorra um erro.
         logging.info("Execução Finalizada")
 
 if __name__ == "__main__":
+    # Garante que os diretórios de input e output existam antes de executar.
     INPUT_PATH.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
     main()
