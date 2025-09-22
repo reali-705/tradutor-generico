@@ -10,3 +10,7 @@ env/
 # Arquivos de configuração de IDEs
 .vscode/
 .idea/
+
+# Arquivos de dados gerados pela aplicação
+/data/input/*.txt
+/data/output/*.txt
