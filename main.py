@@ -9,6 +9,7 @@ tarefas (geração aleatória, pseudoaleatória e leitura de arquivo) em uma
 
 import argparse
 import sys
+import logging
 from pathlib import Path
 from src import (
     criar_transcritor_dna_rna,
@@ -86,31 +87,30 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
         ValueError: Se a cadeia de DNA contiver caracteres inválidos.
     """
     # Passo 1: Validação e Limpeza da Cadeia de DNA
-    print("-> Validando e limpando DNA...")
+    logging.info("Validando e limpando DNA...")
     cadeia_dna = "".join(filter(str.isalpha, dna)).upper()
     if not all(base in 'ATCG' for base in cadeia_dna):
         raise ValueError("DNA contém bases inválidas. Use apenas A, T, C, G.")
     
     # Passo 2: Transcrição para RNA usando o Transdutor Finito
-    print("-> Transcrevendo DNA para RNA...")
+    logging.info("Transcrevendo DNA para RNA...")
     transcritor = criar_transcritor_dna_rna()
     cadeia_rna = transcritor.transcrever(cadeia_dna)
 
     # Passo 3: Tradução para Proteína usando o Autômato de Pilha
-    print("-> Traduzindo RNA para Proteína...")
+    logging.info("Traduzindo RNA para Proteína...")
     ribossomo = criar_ribossomo()
     
-    # 2. Chame transcrever_pilha e formate o resultado
     resultado_pilha = ribossomo.transcrever_pilha(cadeia_rna)
     cadeia_proteina = formatar_proteina(resultado_pilha)
 
     if cadeia_proteina:
-        print("-> Tradução bem-sucedida.")
+        logging.info("Tradução bem-sucedida.")
     else:
-        print("-> AVISO: Nenhuma estrutura de gene válida (AUG...STOP) foi encontrada no RNA. Nenhuma proteína foi produzida.")
+        logging.warning("Nenhuma estrutura de gene válida (AUG...STOP) foi encontrada no RNA. Nenhuma proteína foi produzida.")
 
     # Passo 4: Exibição dos resultados no terminal
-    print("\n" + " RESULTADOS ".center(LARGURA_LINHA, "="))
+    print(" RESULTADOS ".center(LARGURA_LINHA, "="))
     previa_dna = f"{cadeia_dna[:PREVIA_CADEIA]}..." if len(cadeia_dna) > PREVIA_CADEIA else cadeia_dna
     previa_rna = f"{cadeia_rna[:PREVIA_CADEIA]}..." if len(cadeia_rna) > PREVIA_CADEIA else cadeia_rna
     proteinas = cadeia_proteina.split(" ")
@@ -127,10 +127,10 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
     print("=" * LARGURA_LINHA)
 
     # Passo 5: Salvando os resultados em arquivos de SAÍDA (output)
-    print("\n-> Salvando arquivos de saída...")
+    logging.info("Salvando arquivos de saída...")
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_rna.txt", cadeia_rna)
     escrever_arquivo(OUTPUT_PATH / f"{nome_base_arquivo}_proteina.txt", cadeia_proteina)
-    print("-> Arquivos de RNA e Proteína salvos em 'data/output/'.")
+    logging.info("Arquivos de RNA e Proteína salvos em 'data/output/'.")
 
 
 def main() -> None:
@@ -140,39 +140,41 @@ def main() -> None:
     Orquestra a análise dos argumentos da linha de comando e executa as
     tarefas solicitadas na ordem definida: pseudoaleatório, aleatório e leitura de arquivo.
     """
+    # 2. Configure o logging básico aqui, no início da sua aplicação.
+    logging.basicConfig(
+        level=logging.INFO,  # Nível mínimo de mensagens a serem exibidas.
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%H:%M:%S'
+    )
+
     parser = setup_parser()
     
-    # Se nenhum argumento for passado, exibe a ajuda e encerra.
     if len(sys.argv) == 1:
         parser.print_help()
-        print("\nERRO: Você deve fornecer pelo menos uma ação (-p, -a, ou -l).")
+        logging.error("Você deve fornecer pelo menos uma ação (-p, -a, ou -l).")
         return
 
     args = parser.parse_args()
-    print("\n" + " Início da Execução ".center(LARGURA_LINHA, "="))
+    logging.info("Início da Execução")
 
     try:
-        # Executa as tarefas em uma ordem pré-definida, se os argumentos estiverem presentes.
         if args.pseudoaleatorio is not None:
             print("\n" + " MODO: DNA PSEUDOALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_pseudoaleatorio(args.pseudoaleatorio)
-            # MELHORIA: Salva o DNA de ENTRADA aqui, no contexto da geração.
-            print("-> Salvando DNA gerado em 'data/input/'...")
+            logging.info("Salvando DNA gerado em 'data/input/'...")
             escrever_arquivo(INPUT_PATH / "pseudoaleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "pseudoaleatorio")
 
         if args.aleatorio is not None:
             print("\n" + " MODO: DNA ALEATÓRIO ".center(LARGURA_LINHA, "#"))
             dna_gerado = gerar_dna_aleatorio(args.aleatorio)
-            # MELHORIA: Salva o DNA de ENTRADA aqui, no contexto da geração.
-            print("-> Salvando DNA gerado em 'data/input/'...")
+            logging.info("Salvando DNA gerado em 'data/input/'...")
             escrever_arquivo(INPUT_PATH / "aleatorio_dna.txt", dna_gerado)
             processar_cadeia(dna_gerado, "aleatorio")
 
         if args.ler_arquivo:
             print("\n" + " MODO: LEITURA DE ARQUIVO ".center(LARGURA_LINHA, "#"))
             
-            # Lógica robusta para encontrar o arquivo de entrada
             caminho_proposto = Path(args.ler_arquivo)
             if not caminho_proposto.exists():
                 caminho_final = INPUT_PATH / caminho_proposto.with_suffix('.txt').name
@@ -182,20 +184,19 @@ def main() -> None:
             if not caminho_final.exists():
                 raise FileNotFoundError(f"Arquivo não encontrado. Verificado em '{caminho_proposto}' e '{caminho_final}'.")
 
-            print(f"-> Lendo arquivo: {caminho_final}")
+            logging.info(f"Lendo arquivo: {caminho_final}")
             dna_lido = ler_arquivo(caminho_final)
             nome_base = caminho_final.stem
             processar_cadeia(dna_lido, nome_base)
 
     except (ValueError, FileNotFoundError) as e:
-        print(f"\nERRO: {e}")
+        logging.error(f"{e}")
     except Exception as e:
-        print(f"\nERRO INESPERADO: {e}")
+        logging.critical(f"Ocorreu um erro inesperado: {e}", exc_info=True)
     finally:
-        print("\n" + " Execução Finalizada ".center(LARGURA_LINHA, "=") + "\n")
+        logging.info("Execução Finalizada")
 
 if __name__ == "__main__":
-    # Garante que os diretórios de dados existam antes de qualquer operação
     INPUT_PATH.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
     main()
