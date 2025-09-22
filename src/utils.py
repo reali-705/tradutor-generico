@@ -47,6 +47,23 @@ def gerar_dna_aleatorio(tamanho: int = 1000) -> str:
     """
     return "".join(random.choices(BASES_DNA, k=tamanho))
 
+def formatar_proteina(proteina: list[str]) -> str:
+    """
+    Converte a lista de saída bruta do autômato em uma string de proteína formatada.
+
+    Exemplo: ['Met', 'Phe', 'Stop'] -> "Met-Phe"
+
+    Args:
+        proteina: A lista de símbolos retornada pelo método transcrever_pilha.
+
+    Returns:
+        Uma string formatada representando a(s) proteína(s) traduzida(s).
+    """
+    if not proteina:
+        return ""
+    # Junta todos os itens com '-', substitui 'Stop' por um espaço e remove espaços extras.
+    return re.sub(r'(-)?Stop(-)?', ' ', '-'.join(proteina)).strip()
+
 def nome_arquivo_valido(nome_arquivo: str) -> bool:
     """
     Verifica se um nome de arquivo é válido para o sistema de arquivos do Windows.

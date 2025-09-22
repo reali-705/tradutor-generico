@@ -16,7 +16,8 @@ from src import (
     gerar_dna_aleatorio,
     gerar_dna_pseudoaleatorio,
     escrever_arquivo,
-    ler_arquivo
+    ler_arquivo,
+    formatar_proteina
 )
 
 # --- Constantes Globais ---
@@ -98,9 +99,12 @@ def processar_cadeia(dna: str, nome_base_arquivo: str):
     # Passo 3: Tradução para Proteína usando o Autômato de Pilha
     print("-> Traduzindo RNA para Proteína...")
     ribossomo = criar_ribossomo()
-    cadeia_proteina = ""
-    if ribossomo.validar(cadeia_rna):
-        cadeia_proteina = ribossomo.cadeia_saida()[::-1] # Reverte a cadeia de saída conforme projetado
+    
+    # 2. Chame transcrever_pilha e formate o resultado
+    resultado_pilha = ribossomo.transcrever_pilha(cadeia_rna)
+    cadeia_proteina = formatar_proteina(resultado_pilha)
+
+    if cadeia_proteina:
         print("-> Tradução bem-sucedida.")
     else:
         print("-> AVISO: Nenhuma estrutura de gene válida (AUG...STOP) foi encontrada no RNA. Nenhuma proteína foi produzida.")

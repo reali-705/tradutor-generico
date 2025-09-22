@@ -7,7 +7,7 @@ em outras partes do projeto.
 """
 
 from .automata import TransdutorFinito, Automato_Pilha
-from .utils import gerar_dna_aleatorio, gerar_dna_pseudoaleatorio, ler_arquivo, escrever_arquivo
+from .utils import gerar_dna_aleatorio, gerar_dna_pseudoaleatorio, ler_arquivo, escrever_arquivo, formatar_proteina
 from .tabela_codons import TABELA_CODONS
 
 def criar_transcritor_dna_rna() -> TransdutorFinito:

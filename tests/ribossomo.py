@@ -8,25 +8,7 @@ Este teste valida a capacidade do autômato de:
 4. Lidar com "lixo" genético antes, entre e depois dos genes.
 """
 
-from src import criar_ribossomo
-import re
-
-def formatando_proteina(proteina: list[str]) -> str:
-    """
-    Converte a lista de saída bruta do autômato em uma string de proteína formatada.
-
-    Exemplo: ['Met', 'Phe', 'Stop'] -> "Met-Phe"
-
-    Args:
-        proteina: A lista de símbolos retornada pelo método transcrever_pilha.
-
-    Returns:
-        Uma string formatada representando a(s) proteína(s) traduzida(s).
-    """
-    if not proteina:
-        return ""
-    # Junta todos os itens com '-', substitui 'Stop' por um espaço e remove espaços extras.
-    return re.sub(r'(-)?Stop(-)?', ' ', '-'.join(proteina)).strip()
+from src import criar_ribossomo, formatar_proteina
 
 def run_tests():
     """Executa uma série de testes de validação no autômato do ribossomo."""
@@ -60,7 +42,7 @@ def run_tests():
             # 1. Executa o autômato para obter a lista de símbolos da pilha.
             resultado_pilha = ribossomo.transcrever_pilha(rna)
             # 2. Formata a lista de saída para a string de comparação.
-            cadeia_proteina = formatando_proteina(resultado_pilha)
+            cadeia_proteina = formatar_proteina(resultado_pilha)
             # 3. Compara o resultado obtido com o esperado.
             assert cadeia_proteina == esperado_proteina, f"Esperado: '{esperado_proteina}', Obtido: '{cadeia_proteina}'"
             
