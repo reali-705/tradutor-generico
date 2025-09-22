@@ -42,68 +42,98 @@ def criar_transcritor_dna_rna() -> TransdutorFinito:
 
 
 def criar_ribossomo() -> Automato_Pilha:
+    """
+    Cria e retorna uma instância do Automato_Pilha configurado para simular
+    um ribossomo, traduzindo uma fita de RNA em proteínas.
+
+    O autômato implementa uma estratégia Z0-cêntrica, onde o símbolo 'Z0' é
+    mantido no topo da pilha na maior parte do tempo para padronizar as transições.
+
+    A lógica é dividida em 4 fases:
+    1. Busca: Procura pelo códon de início 'AUG'.
+    2. Tradução: Converte códons de 3 bases em aminoácidos.
+    3. Rollback: Limpa a pilha em caso de um gene incompleto no final da cadeia.
+    4. Finalização: Move o autômato para o estado de aceitação.
+
+    Returns:
+        Automato_Pilha: Uma instância do autômato pronta para uso.
+    """
     aminoacidos = set(TABELA_CODONS.values())
     Q = {'q_inicial', 'q_achouA', 'q_achouAU', 'q_traduz', 'q_baseXA', 'q_baseXU', 'q_baseXC', 'q_baseXG', 'q_rollback', 'q_final'}
-    Σ = {'A', 'C', 'G', 'U', None}
+    Σ = {'A', 'C', 'G', 'U', None} # Alfabeto de entrada, incluindo ε (None)
     q0 = 'q_inicial'
     Z0 = 'Z0'
     F = {'q_final'}
-    Γ = aminoacidos.union(Σ).union({Z0}).union({None})
+    Γ = aminoacidos.union(Σ).union({Z0}).union({None}) # Alfabeto da pilha
     δ = {}
 
-    # fase de busca pelo códon de início (AUG)
+    # --- FASE 1: BUSCA PELO CÓDON DE INÍCIO (AUG) ---
+    # Estas regras assumem que Z0 está no topo. Isso significa que o autômato
+    # só encontrará o primeiro gene. Para múltiplos genes, seria necessário
+    # generalizar para outros topos de pilha (ex: 'Stop').
     estados_busca = {'q_inicial', 'q_achouA', 'q_achouAU'}
     for base in Σ:
         for estado in estados_busca:
-            # filtro para que toda leitura que não seja A na fase de busca volte para o estado inicial
+            # Regra geral: se não for 'A', volta para o início da busca.
             if base != 'A':
                 δ[(estado, base, Z0)] = ('q_inicial', [Z0])
-            # filtro caso a leitura seja A, segue para o estado q_achouA
+            # Se for 'A', avança para o estado 'q_achouA'.
             else:
                 δ[(estado, base, Z0)] = ('q_achouA', [Z0])
-            # transições específicas para parte do códon de início (AUG)
+            
+            # Regra específica: se viu 'A' e agora vê 'U', avança para 'q_achouAU'.
             if estado == 'q_achouA' and base == 'U':
                 δ[(estado, base, Z0)] = ('q_achouAU', [Z0])
-            # transição final do códon de início (AUG)
+            # Regra específica: se viu 'AU' e agora vê 'G', a busca teve sucesso.
+            # Empilha 'Met' e 'Z0' para iniciar a tradução com Z0 no topo.
             if estado == 'q_achouAU' and base == 'G':
                 δ[(estado, base, Z0)] = ('q_traduz', ['Met', Z0])
     
-    # fase de tradução dos códons
+    # --- FASE 2: TRADUÇÃO DOS CÓDONS ---
+    # Implementa a lógica de (pilha, estado, entrada) para ler 3 bases.
     bases = {'A', 'U', 'C', 'G'}
     for base1 in bases:
-        # transição referente à leitura da primeira base do códon
+        # Lê a 1ª base: espera Z0 no topo, empilha a base lida.
+        # A pilha fica [..., aminoacido_anterior, base1]
         δ[('q_traduz', base1, Z0)] = ('q_traduz', [base1])
         for base2 in bases:
-            # transição referente à leitura da segunda base do códon
+            # Lê a 2ª base: o topo é a base1. Muda de estado para "lembrar" a base2.
+            # A pilha não muda. O estado agora é 'q_baseX' + base2.
             δ[('q_traduz', base2, base1)] = (f'q_baseX{base2}', [base1])
             for base3 in bases:
-                # transição referente à leitura da terceira base do códon
+                # Lê a 3ª base: combina (topo=base1, estado=base2, entrada=base3) para formar o códon.
                 aminoacido = TABELA_CODONS[f'{base1}{base2}{base3}']
-                # se for um códon de parada, volta para o estado inicial
+                # Se for um códon de parada, empilha 'Stop' e 'Z0', e volta a buscar.
                 if aminoacido == 'Stop':
                     δ[(f'q_baseX{base2}', base3, base1)] = ('q_inicial', ['Stop', Z0])
-                # se for um aminoácido, empilha o aminoácido e Z0
+                # Senão, empilha o aminoácido e 'Z0', e volta a traduzir.
                 else:
                     δ[(f'q_baseX{base2}', base3, base1)] = ('q_traduz', [aminoacido, Z0])
     
-    # fase de rollback (desempilha os aminoacidos que não formaram uma proteina completa)
-    δ[('q_traduz', None, Z0)] = ('q_rollback', []) # base0, vai direto pro rollback
+    # --- FASE 3: ROLLBACK (LIMPEZA DE GENE INCOMPLETO) ---
+    # Acionado por uma transição ε (None) se a cadeia acabar no meio da tradução.
+    δ[('q_traduz', None, Z0)] = ('q_rollback', []) # Estava esperando a 1ª base.
     for base in bases:
-        δ[('q_traduz', None, base)] = ('q_rollback', []) # base1, apaga a base1 e vai pro rollback
+        δ[('q_traduz', None, base)] = ('q_rollback', []) # Leu a 1ª base, limpa e entra em rollback.
         for base_estado in bases:
-            δ[(f'q_baseX{base_estado}', None, base)] = ('q_rollback', []) # baseX, apaga a base1 e a baseX depois vai pro rollback
+            δ[(f'q_baseX{base_estado}', None, base)] = ('q_rollback', []) # Leu a 2ª base, limpa e entra em rollback.
 
+    # Lógica de limpeza: apaga todos os aminoácidos até encontrar um 'Stop'.
     for aminoacido in aminoacidos:
         if aminoacido == 'Stop':
-            δ[('q_rollback', None, aminoacido)] = ('q_rollback', [Z0]) # desempilha o Stop e empilha Z0
+            # Se encontra 'Stop', para de limpar o gene anterior e restaura Z0.
+            δ[('q_rollback', None, aminoacido)] = ('q_rollback', [Z0])
         else:
-            δ[('q_rollback', None, aminoacido)] = ('q_rollback', []) # desempilha o aminoacido e continua no rollback
+            # Se for um aminoácido normal, apenas o remove da pilha.
+            δ[('q_rollback', None, aminoacido)] = ('q_rollback', [])
 
-    # fase de finalização (aceitação)
-    δ[('q_rollback', None, Z0)] = ('q_final', []) # desempilha o Z0 e vai para o estado final
-    δ[('q_rollback', None, None)] = ('q_final', []) # aceita se a pilha estiver vazia
+    # --- FASE 4: FINALIZAÇÃO (ACEITAÇÃO) ---
+    # Condições para mover para o estado final 'q_final'.
+    δ[('q_rollback', None, Z0)] = ('q_final', []) # Termina após um rollback bem-sucedido.
+    δ[('q_rollback', None, None)] = ('q_final', []) # Termina se o rollback esvaziar a pilha.
     for estado in estados_busca:
-        δ[(estado, None, Z0)] = ('q_final', []) # aceita se estiver na fase de busca e a pilha só tiver Z0
+        # Termina se a cadeia acabar durante a fase de busca.
+        δ[(estado, None, Z0)] = ('q_final', [])
 
 
     return Automato_Pilha(Q, Σ, Γ, δ, q0, Z0, F)
