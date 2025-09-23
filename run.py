@@ -49,9 +49,12 @@ def clean_project(*args):
 # Mapeia um nome amigável para o comando ou função
 TASKS = {
     "main": ["python", "main.py"],
-    "test_dna_p": ["python", "-m", "tests.dna_pseudoaleatorio"],
-    "test_dna_a": ["python", "-m", "tests.dna_aleatorio"],
-    "test_ribossomo": ["python", "-m", "tests.ribossomo"],
+    # Adicionada a tarefa 'test' para rodar a suíte pytest
+    "test": ["pytest", "-v"],
+    # Mantidos os testes antigos como 'demo'
+    "demo_dna_p": ["python", "-m", "tests.dna_pseudoaleatorio"],
+    "demo_dna_a": ["python", "-m", "tests.dna_aleatorio"],
+    "demo_ribossomo": ["python", "-m", "tests.ribossomo"],
     "clean": clean_project,
 }
 
@@ -61,7 +64,7 @@ if __name__ == "__main__":
         print("Tarefas disponíveis:", ", ".join(TASKS.keys()))
         print("\nExemplo de uso:")
         print("  python run.py main -a 100")
-        print("  python run.py clean")
+        print("  python run.py test")
         print("  python run.py clean --all")
         sys.exit(1)
 
@@ -80,6 +83,11 @@ if __name__ == "__main__":
             print(f"Executando tarefa '{task_name}': {' '.join(command)}")
             try:
                 subprocess.run(command, check=True)
+            except FileNotFoundError:
+                print(f"\nErro: O comando '{command[0]}' não foi encontrado.")
+                if command[0] == "pytest":
+                    print("Parece que o pytest não está instalado. Tente 'pip install pytest'.")
+                sys.exit(1)
             except subprocess.CalledProcessError:
                 print(f"\nA tarefa '{task_name}' encontrou um erro.")
     else:
